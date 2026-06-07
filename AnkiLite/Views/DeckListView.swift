@@ -2,6 +2,29 @@ import SwiftUI
 import Combine
 import GRDB
 
+/// Persisted set of collapsed deck ids (re-stored across app launches).
+final class DeckCollapseStore {
+    static let shared = DeckCollapseStore()
+    private let key = "collapsedDeckIds"
+    private var ids: Set<Int64> = []
+
+    init() {
+        let raw = (UserDefaults.standard.array(forKey: key) as? [NSNumber]) ?? []
+        ids = Set(raw.map { $0.int64Value })
+    }
+
+    func isCollapsed(_ id: Int64) -> Bool { ids.contains(id) }
+
+    func toggle(_ id: Int64) {
+        if ids.contains(id) { ids.remove(id) } else { ids.insert(id) }
+        persist()
+    }
+
+    private func persist() {
+        UserDefaults.standard.set(ids.map { NSNumber(value: $0) }, forKey: key)
+    }
+}
+
 /// Loads decks and their due counts for the deck list.
 @MainActor
 final class DeckListViewModel: ObservableObject {
@@ -9,6 +32,8 @@ final class DeckListViewModel: ObservableObject {
         var deck: Deck
         var counts: DeckCounts        // own counts (this deck only)
         var aggregatedCounts: DeckCounts // including descendants
+        var hasChildren: Bool
+        var isCollapsed: Bool
         var id: Int64 { deck.id }
         var depth: Int { deck.depth }
     }
@@ -18,10 +43,14 @@ final class DeckListViewModel: ObservableObject {
 
     private let database: DatabaseManager
     private let settings: AppSettings
+    private let collapseStore: DeckCollapseStore
 
-    init(database: DatabaseManager = .shared, settings: AppSettings) {
+    init(database: DatabaseManager = .shared,
+         settings: AppSettings,
+         collapseStore: DeckCollapseStore = .shared) {
         self.database = database
         self.settings = settings
+        self.collapseStore = collapseStore
     }
 
     func reload() {
@@ -50,23 +79,49 @@ final class DeckListViewModel: ObservableObject {
 
         // Aggregate descendant counts into each deck.
         var aggregated: [Int64: DeckCounts] = ownCounts
+        var hasChildrenMap: [Int64: Bool] = [:]
         for parent in visible {
             let prefix = parent.name + "::"
             var sum = ownCounts[parent.id] ?? DeckCounts()
+            var hasChild = false
             for child in visible where child.id != parent.id && child.name.hasPrefix(prefix) {
                 sum = sum + (ownCounts[child.id] ?? DeckCounts())
+                hasChild = true
             }
             aggregated[parent.id] = sum
+            hasChildrenMap[parent.id] = hasChild
         }
 
-        rows = visible
-            .sorted { $0.name < $1.name }
-            .map { Row(deck: $0, counts: ownCounts[$0.id] ?? DeckCounts(), aggregatedCounts: aggregated[$0.id] ?? DeckCounts()) }
-        isEmpty = rows.isEmpty
+        // Sort by name (== hierarchical), then hide rows whose ancestor is collapsed.
+        let sorted = visible.sorted { $0.name < $1.name }
+        let collapsedNames: Set<String> = Set(sorted
+            .filter { collapseStore.isCollapsed($0.id) }
+            .map(\.name))
+        let filtered = sorted.filter { deck in
+            // Hide if any strict ancestor's name is in collapsedNames.
+            for ancestor in collapsedNames {
+                if deck.name.hasPrefix(ancestor + "::") { return false }
+            }
+            return true
+        }
+
+        rows = filtered.map { d in
+            Row(deck: d,
+                counts: ownCounts[d.id] ?? DeckCounts(),
+                aggregatedCounts: aggregated[d.id] ?? DeckCounts(),
+                hasChildren: hasChildrenMap[d.id] ?? false,
+                isCollapsed: collapseStore.isCollapsed(d.id))
+        }
+        isEmpty = visible.isEmpty
     }
 
     func delete(_ deck: Deck) {
         try? database.deleteDeck(deck)
+        reload()
+    }
+
+    func toggleCollapse(_ deck: Deck) {
+        collapseStore.toggle(deck.id)
         reload()
     }
 }
@@ -197,7 +252,10 @@ struct DeckListView: View {
                 NavigationLink {
                     StudyContainerView(deck: row.deck)
                 } label: {
-                    DeckRowView(row: row)
+                    DeckRowView(row: row, onToggleCollapse: {
+                        Haptics.tap(enabled: settings.haptics)
+                        viewModel.toggleCollapse(row.deck)
+                    })
                 }
                 .listRowBackground(Theme.surface)
                 .listRowSeparatorTint(Theme.separator)
@@ -327,10 +385,11 @@ struct DeckListView: View {
 
 private struct DeckRowView: View {
     let row: DeckListViewModel.Row
+    let onToggleCollapse: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Indentation for hierarchy.
+        HStack(spacing: 10) {
+            // Indentation lines for hierarchy.
             if row.depth > 0 {
                 HStack(spacing: 0) {
                     ForEach(0..<row.depth, id: \.self) { _ in
@@ -339,6 +398,21 @@ private struct DeckRowView: View {
                             .frame(width: 1)
                             .padding(.horizontal, 6)
                     }
+                }
+            }
+            // Disclosure chevron — present only on parents.
+            Group {
+                if row.hasChildren {
+                    Button(action: onToggleCollapse) {
+                        Image(systemName: row.isCollapsed ? "chevron.right" : "chevron.down")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Theme.textSecondary)
+                            .frame(width: 22, height: 22)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Color.clear.frame(width: 22, height: 22)
                 }
             }
             VStack(alignment: .leading, spacing: 2) {
