@@ -1,0 +1,916 @@
+{
+  "sourceLanguage" : "ja",
+  "version" : "1.0",
+  "strings" : {
+    "%lld" : {
+      "shouldTranslate" : false
+    },
+    "%lld:00" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld:00" } }
+      }
+    },
+    "%lld時間" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldh" } }
+      }
+    },
+    "%lld分" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldm" } }
+      }
+    },
+    "%lld日" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldd" } }
+      }
+    },
+    "%lld秒" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%llds" } }
+      }
+    },
+    "%lldか月" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldmo" } }
+      }
+    },
+    "%.1f年" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%.1fy" } }
+      }
+    },
+    "%lld件" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld items" } }
+      }
+    },
+    "%lld個" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld selected" } }
+      }
+    },
+    "%lldpt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldpt" } }
+      }
+    },
+    "< 1分" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "< 1m" } }
+      }
+    },
+    ".apkg ファイルを読み込む" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Import .apkg file" } }
+      }
+    },
+    ".apkg 形式のデッキファイルを選択してください。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose a deck file (.apkg)." } }
+      }
+    },
+    "（空のカード）" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "(empty card)" } }
+      }
+    },
+    "1-3月" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "1-3 mo" } }
+      }
+    },
+    "1日" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "1 day" } }
+      }
+    },
+    "1日の新規カード上限" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Daily new card limit" } }
+      }
+    },
+    "1日の復習上限" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Daily review limit" } }
+      }
+    },
+    "1年+" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "1y+" } }
+      }
+    },
+    "2-7日" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "2-7 d" } }
+      }
+    },
+    "3-6月" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "3-6 mo" } }
+      }
+    },
+    "6月-1年" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "6 mo - 1 y" } }
+      }
+    },
+    "8-30日" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "8-30 d" } }
+      }
+    },
+    "FSRS (新方式)" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "FSRS (new)" } }
+      }
+    },
+    "SM-2 (互換)" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "SM-2 (classic)" } }
+      }
+    },
+    "クラシックな SM-2 方式 (SuperMemo 系)" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Classic SM-2 (SuperMemo lineage)" } }
+      }
+    },
+    "新しい統計的アルゴリズム (推奨)" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Newer statistical algorithm (recommended)" } }
+      }
+    },
+    "アプリ名" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "App name" } }
+      }
+    },
+    "インターバル分布" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Interval distribution" } }
+      }
+    },
+    "インポート" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Import" } }
+      }
+    },
+    "インポートが完了しました" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Import complete" } }
+      }
+    },
+    "インポートに失敗しました" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Import failed" } }
+      }
+    },
+    "iCloud Drive にバックアップ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back up to iCloud Drive" } }
+      }
+    },
+    "お疲れさまでした" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nice work" } }
+      }
+    },
+    "カードがありません" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No cards" } }
+      }
+    },
+    "カードの状態" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Card states" } }
+      }
+    },
+    "カードの文字サイズ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Card font size" } }
+      }
+    },
+    "カードを検索" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search cards" } }
+      }
+    },
+    "カードを追加" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add card" } }
+      }
+    },
+    "カードを保存中…" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Saving cards…" } }
+      }
+    },
+    "カスタム学習" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Custom study" } }
+      }
+    },
+    "カテゴリ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Category" } }
+      }
+    },
+    "カテゴリ（親デッキ）" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Category (parent deck)" } }
+      }
+    },
+    "もう一度" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Again" } }
+      }
+    },
+    "むずかしい" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hard" } }
+      }
+    },
+    "ふつう" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Good" } }
+      }
+    },
+    "かんたん" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Easy" } }
+      }
+    },
+    "キャンセル" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } }
+      }
+    },
+    "閉じる" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Close" } }
+      }
+    },
+    "完了" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } }
+      }
+    },
+    "削除" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } }
+      }
+    },
+    "編集" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit" } }
+      }
+    },
+    "追加" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add" } }
+      }
+    },
+    "保存" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save" } }
+      }
+    },
+    "作成" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create" } }
+      }
+    },
+    "やり直す" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try again" } }
+      }
+    },
+    "解除" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear" } }
+      }
+    },
+    "デッキ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Decks" } }
+      }
+    },
+    "デッキがありません" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No decks yet" } }
+      }
+    },
+    "デッキを作成" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create deck" } }
+      }
+    },
+    "デッキを編集" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit deck" } }
+      }
+    },
+    "デッキ一覧に戻る" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back to decks" } }
+      }
+    },
+    "デッキ名" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deck name" } }
+      }
+    },
+    "デッキ名を入力してください。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Please enter a deck name." } }
+      }
+    },
+    "なし" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "None" } }
+      }
+    },
+    "なし（最上位）" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "None (top level)" } }
+      }
+    },
+    "ノートタイプ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Note type" } }
+      }
+    },
+    "ノートを編集" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit note" } }
+      }
+    },
+    "バージョン" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Version" } }
+      }
+    },
+    "バックアップ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Backup" } }
+      }
+    },
+    "バックアップがありません" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No backups yet" } }
+      }
+    },
+    "バックアップ一覧" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Backups" } }
+      }
+    },
+    "パッケージを展開中…" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Extracting package…" } }
+      }
+    },
+    "ファイルから読み込み" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Import from file" } }
+      }
+    },
+    "ファイルから読み込む" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Import from file" } }
+      }
+    },
+    "ファイルを選択" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose file" } }
+      }
+    },
+    "フィールド" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fields" } }
+      }
+    },
+    "ブラウザ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Browser" } }
+      }
+    },
+    "フラグ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Flag" } }
+      }
+    },
+    "プレビュー" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Preview" } }
+      }
+    },
+    "マージ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Merge" } }
+      }
+    },
+    "メディアを取り込み中…" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Importing media…" } }
+      }
+    },
+    "ライト" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Light" } }
+      }
+    },
+    "ダーク" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Dark" } }
+      }
+    },
+    "システムに従う" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Match system" } }
+      }
+    },
+    "テーマ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Theme" } }
+      }
+    },
+    "言語" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } }
+      }
+    },
+    "外観" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Appearance" } }
+      }
+    },
+    "操作" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Interaction" } }
+      }
+    },
+    "触覚フィードバック" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Haptic feedback" } }
+      }
+    },
+    "学習" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Studying" } }
+      }
+    },
+    "学習アルゴリズム" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Scheduling algorithm" } }
+      }
+    },
+    "学習を開始" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Start studying" } }
+      }
+    },
+    "学習中" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Learning" } }
+      }
+    },
+    "学習中 (若い)" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Learning (young)" } }
+      }
+    },
+    "学習時間" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Study time" } }
+      }
+    },
+    "復習" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Review" } }
+      }
+    },
+    "新規" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "New" } }
+      }
+    },
+    "正解" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pass" } }
+      }
+    },
+    "不正解" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fail" } }
+      }
+    },
+    "正答率" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Accuracy" } }
+      }
+    },
+    "合計" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Total" } }
+      }
+    },
+    "習得済み" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mature" } }
+      }
+    },
+    "停止中" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Suspended" } }
+      }
+    },
+    "保持率(30日)" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Retention (30d)" } }
+      }
+    },
+    "平均interval" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Avg interval" } }
+      }
+    },
+    "総レビュー" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Total reviews" } }
+      }
+    },
+    "今日" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Today" } }
+      }
+    },
+    "直近30日のレビュー" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reviews · last 30d" } }
+      }
+    },
+    "今後30日の復習予測" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Forecast · next 30d" } }
+      }
+    },
+    "件数" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Count" } }
+      }
+    },
+    "バケツ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bucket" } }
+      }
+    },
+    "日後" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Day offset" } }
+      }
+    },
+    "日付の区切り" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Day rollover hour" } }
+      }
+    },
+    "設定" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } }
+      }
+    },
+    "情報" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About" } }
+      }
+    },
+    "条件" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Filters" } }
+      }
+    },
+    "対象カード" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Include" } }
+      }
+    },
+    "期限超過のみ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Overdue only" } }
+      }
+    },
+    "最大カード数" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Max cards" } }
+      }
+    },
+    "最終バックアップ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last backup" } }
+      }
+    },
+    "未実行" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Never" } }
+      }
+    },
+    "今すぐバックアップ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back up now" } }
+      }
+    },
+    "上書き" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Overwrite" } }
+      }
+    },
+    "再インポート時" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "On re-import" } }
+      }
+    },
+    "見本テキスト Aa あ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sample Aa あ" } }
+      }
+    },
+    "親デッキ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Parent deck" } }
+      }
+    },
+    "階層" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hierarchy" } }
+      }
+    },
+    "表示名" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Display name" } }
+      }
+    },
+    "変更後の名前" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "New full name" } }
+      }
+    },
+    "作成される名前" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Will be created as" } }
+      }
+    },
+    "親デッキを選ぶと「親::子」の形でネストされます。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choosing a parent nests this deck as \"parent::child\"." } }
+      }
+    },
+    "親を変更すると、サブデッキも一緒に新しい場所に移動します。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Changing the parent moves sub-decks along too." } }
+      }
+    },
+    "例: 英単語" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "e.g. Vocabulary" } }
+      }
+    },
+    "言語::英語::TOEIC" : {
+      "shouldTranslate" : false
+    },
+    "目標保持率" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Desired retention" } }
+      }
+    },
+    "スケジューラ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Scheduler" } }
+      }
+    },
+    "タグ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tags" } }
+      }
+    },
+    "スペース区切り" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Space-separated" } }
+      }
+    },
+    "すべて" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All" } }
+      }
+    },
+    "指定なし" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Any" } }
+      }
+    },
+    "新しいデッキを作るか、\n.apkg ファイルを読み込んでください。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create a new deck, or\nimport an .apkg file." } }
+      }
+    },
+    "このデッキの今日の分は終わりです" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "You're done with this deck for today." } }
+      }
+    },
+    "このデッキのカードと学習履歴がすべて削除されます。元に戻せません。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This deck's cards and review history will be deleted. This cannot be undone." } }
+      }
+    },
+    "タップまたは上にスワイプで答え" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap or swipe up to reveal" } }
+      }
+    },
+    "Cloze ヒント: `Hello {{c1::world}}` のように囲むとそこが穴埋めになります。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cloze tip: wrap text as `Hello {{c1::world}}` to turn it into a blank." } }
+      }
+    },
+    "毎日 1 回、コレクション (SQLite + メディア) を Documents/Backups にバックアップします。最大 7 世代を保持。iCloud は有効化された Apple Developer アカウントが必要です。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Backs up the collection (SQLite + media) to Documents/Backups once a day. Keeps up to 7 generations. iCloud requires an enabled Apple Developer account." } }
+      }
+    },
+    "既存カードはそのままで、次のレビューから選んだ方式が適用されます。FSRS は初回レビュー後にメモリ状態を蓄積するため、最初は SM-2 と挙動が似ます。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Existing cards stay as-is — the new method takes effect on the next review. FSRS builds memory state from your first review, so early behavior resembles SM-2." } }
+      }
+    },
+    "名前・カテゴリを編集" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit name & category" } }
+      }
+    },
+    "apkg を書き出す" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Export .apkg" } }
+      }
+    },
+    "元に戻す" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Undo" } }
+      }
+    },
+    "保留する（今日は表示しない）" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bury (hide today)" } }
+      }
+    },
+    "停止する（学習対象外）" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Suspend (exclude from study)" } }
+      }
+    },
+    "読み込み中…" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Loading…" } }
+      }
+    },
+    "コレクションを読み込み中…" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reading collection…" } }
+      }
+    },
+    "準備中…" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Preparing…" } }
+      }
+    },
+    "該当するカードがありません" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No matching cards" } }
+      }
+    },
+    "無制限" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unlimited" } }
+      }
+    },
+    "文字サイズ" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Font size" } }
+      }
+    },
+    "OK" : {
+      "shouldTranslate" : false
+    },
+    "赤" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Red" } } }
+    },
+    "橙" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Orange" } } }
+    },
+    "緑" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Green" } } }
+    },
+    "青" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Blue" } } }
+    },
+    "桃" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Pink" } } }
+    },
+    "水" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Turquoise" } } }
+    },
+    "紫" : {
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Purple" } } }
+    },
+    "書き出しに失敗" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Export failed" } }
+      }
+    },
+    "保存しました: %@" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Saved: %@" } }
+      }
+    },
+    "失敗: %@" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed: %@" } }
+      }
+    },
+    "保存に失敗" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save failed" } }
+      }
+    },
+    "作成に失敗" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create failed" } }
+      }
+    },
+    "同じ名前のデッキが既にあります。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "A deck with that name already exists." } }
+      }
+    },
+    "「%@」を削除しますか？" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete \"%@\"?" } }
+      }
+    },
+    "学習を開始できませんでした: %@" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn't start studying: %@" } }
+      }
+    },
+    "apkgファイルを開けませんでした。ファイルが破損しているか、対応していない形式です。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn't open the .apkg file. It may be corrupted or in an unsupported format." } }
+      }
+    },
+    "コレクションデータベース (collection.anki21 / collection.anki2) が見つかりませんでした。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Collection database (collection.anki21 / collection.anki2) not found." } }
+      }
+    },
+    "データベースの読み込みに失敗しました: %@" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to read the database: %@" } }
+      }
+    },
+    "ストレージの空き容量が不足しています。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not enough free storage." } }
+      }
+    },
+    "ZIP の書き出しに失敗しました。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to write the ZIP archive." } }
+      }
+    },
+    "一時ファイルの作成に失敗しました。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn't create a temporary file." } }
+      }
+    },
+    "バックアップアーカイブを作成できませんでした。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn't create the backup archive." } }
+      }
+    },
+    "col テーブルが空です。" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The col table is empty." } }
+      }
+    }
+  }
+}

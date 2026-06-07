@@ -18,6 +18,11 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section("外観") {
+                    Picker("言語", selection: $settings.language) {
+                        ForEach(AppLanguage.allCases) { lang in
+                            Text(lang.label).tag(lang)
+                        }
+                    }
                     Picker("テーマ", selection: $settings.appearance) {
                         ForEach(AppearanceMode.allCases) { mode in
                             Text(mode.label).tag(mode)

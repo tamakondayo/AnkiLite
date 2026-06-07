@@ -10,6 +10,7 @@ struct AnkiLiteApp: App {
             RootView()
                 .environmentObject(settings)
                 .environmentObject(importBus)
+                .environment(\.locale, settings.locale)
                 .preferredColorScheme(settings.appearance.colorScheme)
                 .tint(Theme.accent)
                 .onOpenURL { url in
