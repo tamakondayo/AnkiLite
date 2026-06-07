@@ -64,7 +64,16 @@ struct SettingsView: View {
                         HStack {
                             Text("1日の新規カード上限")
                             Spacer()
-                            Text("\(settings.newCardsPerDay)")
+                            Text(settings.newCardsPerDay == 0 ? "無制限" : "\(settings.newCardsPerDay)")
+                                .foregroundStyle(Theme.textSecondary)
+                                .monospacedDigit()
+                        }
+                    }
+                    Stepper(value: $settings.reviewsPerDay, in: 0...9999, step: 25) {
+                        HStack {
+                            Text("1日の復習上限")
+                            Spacer()
+                            Text(settings.reviewsPerDay == 0 ? "無制限" : "\(settings.reviewsPerDay)")
                                 .foregroundStyle(Theme.textSecondary)
                                 .monospacedDigit()
                         }

@@ -167,7 +167,7 @@ final class ApkgImporter {
             // --- cards ---
             var cards: [Card] = []
             let cardRows = try Row.fetchCursor(db, sql: """
-                SELECT id, nid, did, ord, mod, type, queue, due, ivl, factor, reps, lapses, "left" FROM cards
+                SELECT id, nid, did, ord, mod, type, queue, due, ivl, factor, reps, lapses, "left", flags FROM cards
                 """)
             while let row = try cardRows.next() {
                 cards.append(Card(
@@ -183,7 +183,8 @@ final class ApkgImporter {
                     factor: (row["factor"] as Int?).map { $0 == 0 ? 2500 : $0 } ?? 2500,
                     reps: row["reps"] ?? 0,
                     lapses: row["lapses"] ?? 0,
-                    left: row["left"] ?? 0
+                    left: row["left"] ?? 0,
+                    flags: row["flags"] ?? 0
                 ))
             }
 

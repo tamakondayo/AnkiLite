@@ -77,6 +77,8 @@ struct DeckListView: View {
     @State private var showImport = false
     @State private var showSettings = false
     @State private var deckToDelete: Deck?
+    @State private var shareItem: ShareItem?
+    @State private var exportError: String?
 
     init(settings: AppSettings) {
         _viewModel = StateObject(wrappedValue: DeckListViewModel(settings: settings))
@@ -118,6 +120,15 @@ struct DeckListView: View {
             .sheet(isPresented: $showSettings) {
                 SettingsView()
             }
+            .sheet(item: $shareItem) { item in
+                ShareSheet(items: [item.url])
+            }
+            .alert("書き出しに失敗", isPresented: Binding(get: { exportError != nil },
+                                                  set: { if !$0 { exportError = nil } })) {
+                Button("OK") { exportError = nil }
+            } message: {
+                Text(exportError ?? "")
+            }
             .confirmationDialog(
                 deckToDelete.map { "「\($0.displayName)」を削除しますか？" } ?? "",
                 isPresented: Binding(get: { deckToDelete != nil },
@@ -156,12 +167,58 @@ struct DeckListView: View {
                         Label("削除", systemImage: "trash")
                     }
                 }
+                .swipeActions(edge: .leading) {
+                    NavigationLink {
+                        CardBrowserView(deck: row.deck)
+                    } label: {
+                        Label("ブラウザ", systemImage: "list.bullet.rectangle")
+                    }
+                    .tint(Theme.accent)
+                    NavigationLink {
+                        DeckStatsView(deck: row.deck)
+                    } label: {
+                        Label("統計", systemImage: "chart.bar")
+                    }
+                    .tint(Theme.Count.review)
+                }
+                .contextMenu {
+                    NavigationLink {
+                        CardBrowserView(deck: row.deck)
+                    } label: { Label("ブラウザ", systemImage: "list.bullet.rectangle") }
+                    NavigationLink {
+                        DeckStatsView(deck: row.deck)
+                    } label: { Label("統計", systemImage: "chart.bar") }
+                    NavigationLink {
+                        CustomStudyView(deck: row.deck)
+                    } label: { Label("カスタム学習", systemImage: "slider.horizontal.3") }
+                    Button {
+                        exportDeck(row.deck)
+                    } label: { Label("apkgを書き出す", systemImage: "square.and.arrow.up") }
+                    Divider()
+                    Button(role: .destructive) {
+                        deckToDelete = row.deck
+                    } label: { Label("削除", systemImage: "trash") }
+                }
             }
         }
         .scrollContentBackground(.hidden)
         .listStyle(.plain)
         .refreshable {
             viewModel.reload()
+        }
+    }
+
+    private func exportDeck(_ deck: Deck) {
+        Haptics.tap(enabled: settings.haptics)
+        do {
+            let exporter = ApkgExporter()
+            let outURL = try exporter.export(deck: deck,
+                                             to: FileManager.default.temporaryDirectory)
+            shareItem = ShareItem(url: outURL)
+            Haptics.success(enabled: settings.haptics)
+        } catch {
+            exportError = error.localizedDescription
+            Haptics.error(enabled: settings.haptics)
         }
     }
 

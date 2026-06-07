@@ -73,6 +73,13 @@ enum Schema {
             }
         }
 
+        // v2: Anki-style flags column on card (low 3 bits = colour).
+        migrator.registerMigration("v2_card_flags") { db in
+            try db.alter(table: Card.databaseTableName) { t in
+                t.add(column: "flags", .integer).notNull().defaults(to: 0)
+            }
+        }
+
         return migrator
     }
 }

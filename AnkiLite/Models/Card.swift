@@ -12,10 +12,50 @@ enum CardType: Int, Codable {
 /// Anki queue values (subset used by this app).
 enum CardQueue: Int, Codable {
     case suspended = -1
+    case buried = -2
     case new = 0
     case learning = 1
     case review = 2
     case dayLearning = 3
+}
+
+/// Anki-style colored flag. Stored in the low 3 bits of `card.flags`.
+enum CardFlag: Int, Codable, CaseIterable {
+    case none = 0
+    case red = 1
+    case orange = 2
+    case green = 3
+    case blue = 4
+    case pink = 5
+    case turquoise = 6
+    case purple = 7
+
+    var label: String {
+        switch self {
+        case .none: return "なし"
+        case .red: return "赤"
+        case .orange: return "橙"
+        case .green: return "緑"
+        case .blue: return "青"
+        case .pink: return "桃"
+        case .turquoise: return "水"
+        case .purple: return "紫"
+        }
+    }
+
+    /// Hex colour for UI.
+    var hex: String {
+        switch self {
+        case .none: return "#888888"
+        case .red: return "#e05a4a"
+        case .orange: return "#e08a3a"
+        case .green: return "#5ba864"
+        case .blue: return "#4f8bcf"
+        case .pink: return "#d57aa7"
+        case .turquoise: return "#4eb6b6"
+        case .purple: return "#9b6dc8"
+        }
+    }
 }
 
 /// A single card: an instance of a template applied to a note, with its
@@ -44,6 +84,8 @@ struct Card: Identifiable, Codable, Hashable, FetchableRecord, PersistableRecord
     var lapses: Int
     /// Remaining learning steps (encoded; we store the simple remaining count).
     var left: Int
+    /// Flags bitfield (low 3 bits = colour flag; high bits reserved).
+    var flags: Int
 
     enum Columns {
         static let id = Column("id")
@@ -59,6 +101,7 @@ struct Card: Identifiable, Codable, Hashable, FetchableRecord, PersistableRecord
         static let reps = Column("reps")
         static let lapses = Column("lapses")
         static let left = Column("left")
+        static let flags = Column("flags")
     }
 
     var cardType: CardType {
@@ -77,6 +120,12 @@ struct Card: Identifiable, Codable, Hashable, FetchableRecord, PersistableRecord
         set { factor = Int((newValue * 1000).rounded()) }
     }
 
+    /// The colour flag (low 3 bits of `flags`).
+    var colorFlag: CardFlag {
+        get { CardFlag(rawValue: flags & 0b111) ?? .none }
+        set { flags = (flags & ~0b111) | (newValue.rawValue & 0b111) }
+    }
+
     init(id: Int64,
          nid: Int64,
          did: Int64,
@@ -89,7 +138,8 @@ struct Card: Identifiable, Codable, Hashable, FetchableRecord, PersistableRecord
          factor: Int = 2500,
          reps: Int = 0,
          lapses: Int = 0,
-         left: Int = 0) {
+         left: Int = 0,
+         flags: Int = 0) {
         self.id = id
         self.nid = nid
         self.did = did
@@ -103,5 +153,6 @@ struct Card: Identifiable, Codable, Hashable, FetchableRecord, PersistableRecord
         self.reps = reps
         self.lapses = lapses
         self.left = left
+        self.flags = flags
     }
 }

@@ -78,7 +78,9 @@ struct StudyContainerView: View {
         guard session == nil else { return }
         do {
             session = try StudySession(deck: deck,
-                                       scheduler: SM2Scheduler(config: settings.schedulerConfig))
+                                       scheduler: SM2Scheduler(config: settings.schedulerConfig),
+                                       newCardLimit: settings.newCardsPerDay,
+                                       reviewLimit: settings.reviewsPerDay)
         } catch {
             errorMessage = "学習を開始できませんでした: \(error.localizedDescription)"
         }
@@ -111,11 +113,70 @@ struct StudyView: View {
         .background(Theme.background.ignoresSafeArea())
         .navigationTitle(session.deck.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                cardActionsMenu
+            }
+        }
         .onAppear {
             if sessionStartedAt == nil { sessionStartedAt = Date() }
         }
         .onChange(of: session.isFinished) { _, finished in
             if finished { Haptics.success(enabled: settings.haptics) }
+        }
+    }
+
+    // MARK: - Card actions menu (Undo / Bury / Suspend / Flag)
+
+    private var cardActionsMenu: some View {
+        Menu {
+            Button {
+                Haptics.tap(enabled: settings.haptics)
+                try? session.undo()
+            } label: {
+                Label("元に戻す", systemImage: "arrow.uturn.backward")
+            }
+            .disabled(!session.canUndo)
+
+            if session.current != nil {
+                Divider()
+                Menu {
+                    ForEach(CardFlag.allCases, id: \.rawValue) { flag in
+                        Button {
+                            Haptics.tap(enabled: settings.haptics)
+                            try? session.setFlag(flag)
+                        } label: {
+                            HStack {
+                                if flag == session.currentFlag {
+                                    Image(systemName: "checkmark")
+                                }
+                                Image(systemName: flag == .none ? "flag.slash" : "flag.fill")
+                                    .foregroundStyle(Color(hex: flag.hex))
+                                Text(flag.label)
+                            }
+                        }
+                    }
+                } label: {
+                    Label("フラグ", systemImage: "flag")
+                }
+
+                Button {
+                    Haptics.tap(enabled: settings.haptics)
+                    try? session.buryCurrent()
+                } label: {
+                    Label("保留する（今日は表示しない）", systemImage: "moon.zzz")
+                }
+
+                Button(role: .destructive) {
+                    Haptics.tap(enabled: settings.haptics)
+                    try? session.suspendCurrent()
+                } label: {
+                    Label("停止する（学習対象外）", systemImage: "pause.circle")
+                }
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .tint(Theme.textSecondary)
         }
     }
 

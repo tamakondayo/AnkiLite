@@ -32,6 +32,7 @@ final class AppSettings: ObservableObject {
         static let appearance = "appearance"
         static let rolloverHour = "rolloverHour"
         static let newCardsPerDay = "newCardsPerDay"
+        static let reviewsPerDay = "reviewsPerDay"
         static let cardFontSize = "cardFontSize"
         static let haptics = "haptics"
     }
@@ -50,6 +51,11 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(newCardsPerDay, forKey: Keys.newCardsPerDay) }
     }
 
+    /// Daily review cap (0 = unlimited).
+    @Published var reviewsPerDay: Int {
+        didSet { UserDefaults.standard.set(reviewsPerDay, forKey: Keys.reviewsPerDay) }
+    }
+
     /// Base font size (in px) used by the card WebView.
     @Published var cardFontSize: Int {
         didSet { UserDefaults.standard.set(cardFontSize, forKey: Keys.cardFontSize) }
@@ -65,6 +71,7 @@ final class AppSettings: ObservableObject {
         self.appearance = AppearanceMode(rawValue: defaults.string(forKey: Keys.appearance) ?? "") ?? .dark
         self.rolloverHour = defaults.object(forKey: Keys.rolloverHour) as? Int ?? 4
         self.newCardsPerDay = defaults.object(forKey: Keys.newCardsPerDay) as? Int ?? 20
+        self.reviewsPerDay = defaults.object(forKey: Keys.reviewsPerDay) as? Int ?? 200
         self.cardFontSize = defaults.object(forKey: Keys.cardFontSize) as? Int ?? 22
         self.haptics = defaults.object(forKey: Keys.haptics) as? Bool ?? true
     }
