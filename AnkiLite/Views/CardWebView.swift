@@ -82,6 +82,8 @@ struct CardWebView: UIViewRepresentable {
           word-wrap: break-word;
           -webkit-text-size-adjust: 100%;
           -webkit-tap-highlight-color: transparent;
+          -webkit-user-select: none;
+          -webkit-touch-callout: none;
         }
         img { max-width: 100%; height: auto; border-radius: 6px; }
         body.night_mode { color: #ececec; }

@@ -4,6 +4,16 @@ struct SettingsView: View {
     @EnvironmentObject private var settings: AppSettings
     @Environment(\.dismiss) private var dismiss
 
+    @State private var manualBackupMessage: String?
+    @State private var shareItem: ShareItem?
+
+    private var lastBackupLabel: String {
+        guard let date = BackupManager.shared.lastBackupDate else { return "未実行" }
+        let f = RelativeDateTimeFormatter()
+        f.locale = Locale(identifier: "ja_JP")
+        return f.localizedString(for: date, relativeTo: Date())
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -107,6 +117,33 @@ struct SettingsView: View {
                     }
                 }
 
+                Section {
+                    Toggle("iCloud Drive にバックアップ", isOn: $settings.iCloudBackup)
+                        .tint(Theme.accent)
+                    HStack {
+                        Text("最終バックアップ")
+                        Spacer()
+                        Text(lastBackupLabel)
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                    Button {
+                        runManualBackup()
+                    } label: {
+                        Label("今すぐバックアップ", systemImage: "arrow.up.doc")
+                            .foregroundStyle(Theme.accent)
+                    }
+                    NavigationLink {
+                        BackupListView(shareItem: $shareItem)
+                    } label: {
+                        Label("バックアップ一覧", systemImage: "clock.arrow.circlepath")
+                    }
+                } header: {
+                    Text("バックアップ")
+                } footer: {
+                    Text("毎日 1 回、コレクション (SQLite + メディア) を Documents/Backups にバックアップします。最大 7 世代を保持。iCloud は有効化された Apple Developer アカウントが必要です。")
+                        .font(.caption)
+                }
+
                 Section("情報") {
                     HStack {
                         Text("アプリ名")
@@ -133,6 +170,93 @@ struct SettingsView: View {
                         .tint(Theme.textSecondary)
                 }
             }
+            .sheet(item: $shareItem) { item in
+                ShareSheet(items: [item.url])
+            }
+            .alert("バックアップ", isPresented: Binding(
+                get: { manualBackupMessage != nil },
+                set: { if !$0 { manualBackupMessage = nil } }
+            )) {
+                Button("OK") { manualBackupMessage = nil }
+            } message: {
+                Text(manualBackupMessage ?? "")
+            }
+        }
+    }
+
+    private func runManualBackup() {
+        Haptics.tap(enabled: settings.haptics)
+        do {
+            let url = try BackupManager.shared.performBackup(iCloudEnabled: settings.iCloudBackup)
+            Haptics.success(enabled: settings.haptics)
+            manualBackupMessage = "保存しました: \(url.lastPathComponent)"
+        } catch {
+            Haptics.error(enabled: settings.haptics)
+            manualBackupMessage = "失敗: \(error.localizedDescription)"
+        }
+    }
+}
+
+struct BackupListView: View {
+    @Binding var shareItem: ShareItem?
+    @State private var entries: [BackupEntry] = []
+
+    struct BackupEntry: Identifiable {
+        let url: URL
+        let createdAt: Date
+        let size: Int64
+        var id: String { url.path }
+    }
+
+    var body: some View {
+        List {
+            if entries.isEmpty {
+                Text("バックアップがありません")
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.textSecondary)
+                    .listRowBackground(Theme.surface)
+            } else {
+                ForEach(entries) { entry in
+                    Button {
+                        shareItem = ShareItem(url: entry.url)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(entry.url.lastPathComponent)
+                                .font(.subheadline)
+                                .foregroundStyle(Theme.textPrimary)
+                            HStack {
+                                Text(entry.createdAt.formatted(date: .abbreviated, time: .shortened))
+                                Spacer()
+                                Text(ByteCountFormatter.string(fromByteCount: entry.size, countStyle: .file))
+                            }
+                            .font(.caption)
+                            .foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                    .listRowBackground(Theme.surface)
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            try? FileManager.default.removeItem(at: entry.url)
+                            load()
+                        } label: { Label("削除", systemImage: "trash") }
+                    }
+                }
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .background(Theme.background.ignoresSafeArea())
+        .navigationTitle("バックアップ一覧")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear(perform: load)
+    }
+
+    private func load() {
+        let fm = FileManager.default
+        entries = BackupManager.shared.listBackups().map { url in
+            let attrs = try? fm.attributesOfItem(atPath: url.path)
+            let date = (attrs?[.creationDate] as? Date) ?? Date()
+            let size = (attrs?[.size] as? Int64) ?? 0
+            return BackupEntry(url: url, createdAt: date, size: size)
         }
     }
 }

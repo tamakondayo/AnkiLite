@@ -15,6 +15,10 @@ struct AnkiLiteApp: App {
                 .onOpenURL { url in
                     importBus.receive(url: url)
                 }
+                .task {
+                    // Daily backup check (no-op if last backup is fresh).
+                    BackupManager.shared.runIfDue(iCloudEnabled: settings.iCloudBackup)
+                }
         }
     }
 }

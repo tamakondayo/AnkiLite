@@ -297,38 +297,44 @@ struct StudyView: View {
     }
 
     /// Unified gesture:
-    ///   - Front side: any upward swipe (or tap) reveals the answer.
-    ///   - Back side: horizontal swipes commit Again/Good, vertical commits Hard/Easy.
+    ///   - Front: tap or any drag past the threshold flips to the answer
+    ///     (drags don't commit, since the answer hasn't been read yet).
+    ///   - Back: horizontal commits Again/Good. Vertical is deliberately
+    ///     ignored to keep accidental Hard/Easy off — those are explicit
+    ///     button taps, since they materially affect the schedule.
     private func cardGesture(for due: StudySession.DueCard) -> some Gesture {
-        DragGesture(minimumDistance: 14)
+        DragGesture(minimumDistance: 16)
             .onChanged { value in
-                dragOffset = value.translation
+                // Only follow the finger horizontally on the back side
+                // (mirrors the only commit gestures we support there).
+                if showingAnswer {
+                    dragOffset = CGSize(width: value.translation.width,
+                                        height: value.translation.height * 0.15)
+                } else {
+                    // Front: just hint at the swipe but stay close to home.
+                    let dampened = value.translation.width * 0.3
+                    dragOffset = CGSize(width: dampened,
+                                        height: value.translation.height * 0.1)
+                }
             }
             .onEnded { value in
                 let h = value.translation.width
                 let v = value.translation.height
-                let threshold: CGFloat = 90
+                let threshold: CGFloat = 100
 
                 if !showingAnswer {
-                    // Front: any reasonable drag (especially upward) reveals.
-                    if abs(h) > threshold || v < -threshold {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { dragOffset = .zero }
-                        revealAnswer()
-                    } else {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { dragOffset = .zero }
-                    }
+                    let revealed = abs(h) > threshold || v < -threshold
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) { dragOffset = .zero }
+                    if revealed { revealAnswer() }
                     return
                 }
 
-                // Back: pick the dominant axis.
+                // Back: only horizontal swipes commit.
                 if abs(h) > abs(v) {
                     if h < -threshold { commit(.again, due: due); return }
                     if h > threshold { commit(.good, due: due); return }
-                } else {
-                    if v < -threshold { commit(.easy, due: due); return }
-                    if v > threshold { commit(.hard, due: due); return }
                 }
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) { dragOffset = .zero }
+                withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) { dragOffset = .zero }
             }
     }
 
