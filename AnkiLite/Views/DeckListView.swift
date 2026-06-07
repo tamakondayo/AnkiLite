@@ -81,6 +81,7 @@ struct DeckListView: View {
     @State private var shareItem: ShareItem?
     @State private var exportError: String?
     @State private var newCardDeck: Deck?
+    @State private var deckToEdit: Deck?
     @State private var showNewDeck = false
     @State private var showNewCardPicker = false
 
@@ -155,6 +156,9 @@ struct DeckListView: View {
             .sheet(isPresented: $showNewDeck, onDismiss: { viewModel.reload() }) {
                 NewDeckView()
             }
+            .sheet(item: $deckToEdit, onDismiss: { viewModel.reload() }) { deck in
+                DeckEditView(deck: deck)
+            }
             .sheet(isPresented: $showNewCardPicker, onDismiss: { viewModel.reload() }) {
                 if let first = viewModel.rows.first?.deck {
                     NewNoteView(initialDeck: first)
@@ -205,20 +209,23 @@ struct DeckListView: View {
                     }
                 }
                 .swipeActions(edge: .leading) {
+                    Button {
+                        deckToEdit = row.deck
+                    } label: {
+                        Label("編集", systemImage: "pencil")
+                    }
+                    .tint(Theme.accent)
                     NavigationLink {
                         CardBrowserView(deck: row.deck)
                     } label: {
                         Label("ブラウザ", systemImage: "list.bullet.rectangle")
                     }
-                    .tint(Theme.accent)
-                    NavigationLink {
-                        DeckStatsView(deck: row.deck)
-                    } label: {
-                        Label("統計", systemImage: "chart.bar")
-                    }
                     .tint(Theme.Count.review)
                 }
                 .contextMenu {
+                    Button {
+                        deckToEdit = row.deck
+                    } label: { Label("名前・カテゴリを編集", systemImage: "pencil") }
                     NavigationLink {
                         CardBrowserView(deck: row.deck)
                     } label: { Label("ブラウザ", systemImage: "list.bullet.rectangle") }
@@ -233,7 +240,7 @@ struct DeckListView: View {
                     } label: { Label("カードを追加", systemImage: "plus.rectangle.on.rectangle") }
                     Button {
                         exportDeck(row.deck)
-                    } label: { Label("apkgを書き出す", systemImage: "square.and.arrow.up") }
+                    } label: { Label("apkg を書き出す", systemImage: "square.and.arrow.up") }
                     Divider()
                     Button(role: .destructive) {
                         deckToDelete = row.deck

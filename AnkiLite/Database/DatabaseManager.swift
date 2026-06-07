@@ -83,6 +83,49 @@ final class DatabaseManager {
         }
     }
 
+    /// Renames a deck (and updates all descendant deck names so they remain
+    /// nested under the new fully-qualified name).
+    ///
+    /// - Throws: if `newName` collides with an existing deck.
+    func renameDeck(_ deck: Deck, to newName: String) throws {
+        let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            throw NSError(domain: "DatabaseManager", code: 1, userInfo: [
+                NSLocalizedDescriptionKey: "デッキ名を入力してください。"
+            ])
+        }
+        if trimmed == deck.name { return }
+
+        try dbQueue.write { db in
+            // Collision check (case-sensitive, same rule as Anki).
+            let conflict = try Int.fetchOne(db,
+                sql: "SELECT COUNT(*) FROM \(Deck.databaseTableName) WHERE name = ? AND id != ?",
+                arguments: [trimmed, deck.id]) ?? 0
+            if conflict > 0 {
+                throw NSError(domain: "DatabaseManager", code: 2, userInfo: [
+                    NSLocalizedDescriptionKey: "同じ名前のデッキが既にあります。"
+                ])
+            }
+
+            let oldPrefix = deck.name + "::"
+            let newPrefix = trimmed + "::"
+            let now = Int64(Date().timeIntervalSince1970)
+
+            // Rename the deck itself.
+            try db.execute(sql: """
+                UPDATE \(Deck.databaseTableName) SET name = ?, mod = ? WHERE id = ?
+                """, arguments: [trimmed, now, deck.id])
+
+            // Rename descendants by string-prefix substitution.
+            try db.execute(sql: """
+                UPDATE \(Deck.databaseTableName)
+                SET name = ? || SUBSTR(name, ?),
+                    mod = ?
+                WHERE name LIKE ?
+                """, arguments: [newPrefix, oldPrefix.count + 1, now, oldPrefix + "%"])
+        }
+    }
+
     // MARK: - Lookups
 
     func noteType(id: Int64) throws -> NoteType? {
