@@ -110,13 +110,10 @@ struct StudyView: View {
                     cardArea(for: due)
                     if showingAnswer {
                         answerArea(for: due)
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
                     } else {
                         tapHint
-                            .transition(.opacity)
                     }
                 }
-                .animation(.easeInOut(duration: 0.2), value: showingAnswer)
             }
         }
         .background(Theme.background.ignoresSafeArea())
@@ -245,55 +242,55 @@ struct StudyView: View {
         let renderer = CardRenderer(due: due)
         let body = showingAnswer ? renderer.backHTML() : renderer.frontHTML()
 
-        return CardWebView(bodyHTML: body,
-                           userCSS: due.noteType.css,
-                           nightMode: nightMode,
-                           fontSize: settings.cardFontSize)
-            .background(Theme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Theme.separator, lineWidth: 0.5)
-            )
-            .overlay(alignment: .topLeading) {
-                if due.card.colorFlag != .none {
-                    Image(systemName: "flag.fill")
-                        .font(.subheadline)
-                        .foregroundStyle(Color(hex: due.card.colorFlag.hex))
-                        .padding(10)
-                }
+        return ZStack {
+            CardWebView(bodyHTML: body,
+                        userCSS: due.noteType.css,
+                        nightMode: nightMode,
+                        fontSize: settings.cardFontSize)
+                // WebView would otherwise swallow taps before SwiftUI sees them.
+                // Only enable hit-testing on the back so <audio> controls work.
+                .allowsHitTesting(showingAnswer)
+
+            // Transparent layer that always receives the tap/drag — keeps the
+            // reveal gesture working regardless of what the HTML body contains.
+            Color.clear
+                .contentShape(Rectangle())
+                .allowsHitTesting(!showingAnswer)
+        }
+        .background(Theme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Theme.separator, lineWidth: 0.5)
+        )
+        .overlay(alignment: .topLeading) {
+            if due.card.colorFlag != .none {
+                Image(systemName: "flag.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(Color(hex: due.card.colorFlag.hex))
+                    .padding(10)
             }
-            .shadow(color: Color.black.opacity(0.22), radius: 12, x: 0, y: 6)
-            .padding(.horizontal, 12)
-            .padding(.top, 10)
-            // Reserve space at the bottom that fits the (taller) answer bar.
-            .padding(.bottom, 96)
-            .id("\(due.id)-\(showingAnswer)")
-            .offset(x: dragOffset.width, y: dragOffset.height * 0.2)
-            .rotationEffect(.degrees(Double(dragOffset.width) / 35))
-            .rotation3DEffect(.degrees(flipAngle), axis: (x: 0, y: 1, z: 0), perspective: 0.5)
-            .gesture(cardGesture(for: due))
-            .onTapGesture { revealAnswer() }
-            .onChange(of: due.id) { _, _ in
-                showingAnswer = false
-                flipAngle = 0
-            }
+        }
+        .shadow(color: Color.black.opacity(0.22), radius: 12, x: 0, y: 6)
+        .padding(.horizontal, 12)
+        .padding(.top, 10)
+        // Reserve space at the bottom that fits the (taller) answer bar.
+        .padding(.bottom, 96)
+        .id("\(due.id)-\(showingAnswer)")
+        .offset(x: dragOffset.width)
+        .contentShape(Rectangle())
+        .onTapGesture { revealAnswer() }
+        .gesture(cardGesture(for: due))
+        .onChange(of: due.id) { _, _ in
+            showingAnswer = false
+            flipAngle = 0
+        }
     }
 
     private func revealAnswer() {
         guard !showingAnswer else { return }
         Haptics.tap(enabled: settings.haptics)
-        // Subtle half-flip then settle, to communicate the "turning over".
-        withAnimation(.easeIn(duration: 0.18)) {
-            flipAngle = 90
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
-            showingAnswer = true
-            flipAngle = -90
-            withAnimation(.easeOut(duration: 0.18)) {
-                flipAngle = 0
-            }
-        }
+        showingAnswer = true
     }
 
     /// Unified gesture:
@@ -355,17 +352,10 @@ struct StudyView: View {
 
     private func commit(_ ease: ReviewEase, due: StudySession.DueCard) {
         Haptics.answer(enabled: settings.haptics)
-        // Slide the card out in the direction the user pushed (or just fade for taps).
-        let slideOut: CGFloat = (ease == .again ? -1 : 1) * 600
-        withAnimation(.easeIn(duration: 0.18)) {
-            dragOffset = CGSize(width: slideOut, height: 0)
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
-            dragOffset = .zero
-            showingAnswer = false
-            flipAngle = 0
-            try? session.answer(ease)
-        }
+        dragOffset = .zero
+        showingAnswer = false
+        flipAngle = 0
+        try? session.answer(ease)
     }
 }
 

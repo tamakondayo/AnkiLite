@@ -178,7 +178,7 @@ struct ImportView: View {
                 Text(".apkg ファイルを読み込む")
                     .font(.headline)
                     .foregroundStyle(Theme.textPrimary)
-                Text("Anki で書き出したデッキファイルを選択してください。")
+                Text(".apkg 形式のデッキファイルを選択してください。")
                     .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)

@@ -30,8 +30,8 @@ enum SchedulerKind: String, CaseIterable, Identifiable {
 
     var subtitle: String {
         switch self {
-        case .sm2: return "Anki 互換のクラシック方式"
-        case .fsrs: return "Anki 23.10+ の既定。新しい統計的アルゴリズム"
+        case .sm2: return "クラシックな SM-2 方式 (SuperMemo 系)"
+        case .fsrs: return "新しい統計的アルゴリズム (推奨)"
         }
     }
 }

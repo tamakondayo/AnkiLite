@@ -81,6 +81,8 @@ struct DeckListView: View {
     @State private var shareItem: ShareItem?
     @State private var exportError: String?
     @State private var newCardDeck: Deck?
+    @State private var showNewDeck = false
+    @State private var showNewCardPicker = false
 
     init(settings: AppSettings) {
         _viewModel = StateObject(wrappedValue: DeckListViewModel(settings: settings))
@@ -107,9 +109,27 @@ struct DeckListView: View {
                     .tint(Theme.textSecondary)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        Haptics.tap(enabled: settings.haptics)
-                        showImport = true
+                    Menu {
+                        Button {
+                            Haptics.tap(enabled: settings.haptics)
+                            showNewDeck = true
+                        } label: {
+                            Label("デッキを作成", systemImage: "folder.badge.plus")
+                        }
+                        Button {
+                            Haptics.tap(enabled: settings.haptics)
+                            showNewCardPicker = true
+                        } label: {
+                            Label("カードを追加", systemImage: "plus.rectangle.on.rectangle")
+                        }
+                        .disabled(viewModel.rows.isEmpty)
+                        Divider()
+                        Button {
+                            Haptics.tap(enabled: settings.haptics)
+                            showImport = true
+                        } label: {
+                            Label("ファイルから読み込み", systemImage: "square.and.arrow.down")
+                        }
                     } label: {
                         Image(systemName: "plus")
                     }
@@ -131,6 +151,14 @@ struct DeckListView: View {
             }
             .sheet(item: $newCardDeck, onDismiss: { viewModel.reload() }) { deck in
                 NewNoteView(initialDeck: deck)
+            }
+            .sheet(isPresented: $showNewDeck, onDismiss: { viewModel.reload() }) {
+                NewDeckView()
+            }
+            .sheet(isPresented: $showNewCardPicker, onDismiss: { viewModel.reload() }) {
+                if let first = viewModel.rows.first?.deck {
+                    NewNoteView(initialDeck: first)
+                }
             }
             .alert("書き出しに失敗", isPresented: Binding(get: { exportError != nil },
                                                   set: { if !$0 { exportError = nil } })) {
@@ -235,7 +263,7 @@ struct DeckListView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 22) {
             Spacer()
             Image(systemName: "rectangle.stack")
                 .font(.system(size: 48, weight: .light))
@@ -244,27 +272,46 @@ struct DeckListView: View {
                 Text("デッキがありません")
                     .font(.headline)
                     .foregroundStyle(Theme.textPrimary)
-                Text("Anki で書き出した .apkg ファイルを\n読み込むと、ここに表示されます。")
+                Text("新しいデッキを作るか、\n.apkg ファイルを読み込んでください。")
                     .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
             }
-            Button {
-                Haptics.tap(enabled: settings.haptics)
-                showImport = true
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "square.and.arrow.down")
-                    Text("ファイルを読み込む")
+            VStack(spacing: 10) {
+                Button {
+                    Haptics.tap(enabled: settings.haptics)
+                    showNewDeck = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "folder.badge.plus")
+                        Text("デッキを作成")
+                    }
+                    .font(.body.weight(.medium))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Theme.accent)
+                    .foregroundStyle(.white)
+                    .clipShape(Capsule())
                 }
-                .font(.body.weight(.medium))
-                .padding(.horizontal, 22)
-                .padding(.vertical, 12)
-                .background(Theme.accent)
-                .foregroundStyle(.white)
-                .clipShape(Capsule())
+                .buttonStyle(ScaleButtonStyle())
+                Button {
+                    Haptics.tap(enabled: settings.haptics)
+                    showImport = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "square.and.arrow.down")
+                        Text("ファイルから読み込む")
+                    }
+                    .font(.body.weight(.medium))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Theme.surfaceRaised)
+                    .foregroundStyle(Theme.textPrimary)
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(ScaleButtonStyle())
             }
-            .buttonStyle(ScaleButtonStyle())
+            .frame(maxWidth: 280)
             Spacer()
         }
         .padding(40)
