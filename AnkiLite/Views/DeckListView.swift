@@ -76,6 +76,7 @@ struct DeckListView: View {
     @StateObject private var viewModel: DeckListViewModel
     @State private var showImport = false
     @State private var showSettings = false
+    @State private var deckToDelete: Deck?
 
     init(settings: AppSettings) {
         _viewModel = StateObject(wrappedValue: DeckListViewModel(settings: settings))
@@ -103,6 +104,7 @@ struct DeckListView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
+                        Haptics.tap(enabled: settings.haptics)
                         showImport = true
                     } label: {
                         Image(systemName: "plus")
@@ -115,6 +117,23 @@ struct DeckListView: View {
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
+            }
+            .confirmationDialog(
+                deckToDelete.map { "「\($0.displayName)」を削除しますか？" } ?? "",
+                isPresented: Binding(get: { deckToDelete != nil },
+                                     set: { if !$0 { deckToDelete = nil } }),
+                titleVisibility: .visible
+            ) {
+                Button("削除", role: .destructive) {
+                    if let d = deckToDelete {
+                        Haptics.error(enabled: settings.haptics)
+                        viewModel.delete(d)
+                    }
+                    deckToDelete = nil
+                }
+                Button("キャンセル", role: .cancel) { deckToDelete = nil }
+            } message: {
+                Text("このデッキのカードと学習履歴がすべて削除されます。元に戻せません。")
             }
         }
         .onAppear { viewModel.reload() }
@@ -132,7 +151,7 @@ struct DeckListView: View {
                 .listRowSeparatorTint(Theme.separator)
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
-                        viewModel.delete(row.deck)
+                        deckToDelete = row.deck
                     } label: {
                         Label("削除", systemImage: "trash")
                     }
@@ -141,30 +160,43 @@ struct DeckListView: View {
         }
         .scrollContentBackground(.hidden)
         .listStyle(.plain)
+        .refreshable {
+            viewModel.reload()
+        }
     }
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "tray")
-                .font(.system(size: 40, weight: .light))
+        VStack(spacing: 18) {
+            Spacer()
+            Image(systemName: "rectangle.stack")
+                .font(.system(size: 48, weight: .light))
                 .foregroundStyle(Theme.textTertiary)
-            Text("デッキがありません")
-                .font(.headline)
-                .foregroundStyle(Theme.textPrimary)
-            Text("右上の＋から .apkg ファイルを読み込んでください。")
-                .font(.subheadline)
-                .foregroundStyle(Theme.textSecondary)
-                .multilineTextAlignment(.center)
+            VStack(spacing: 6) {
+                Text("デッキがありません")
+                    .font(.headline)
+                    .foregroundStyle(Theme.textPrimary)
+                Text("Anki で書き出した .apkg ファイルを\n読み込むと、ここに表示されます。")
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
             Button {
+                Haptics.tap(enabled: settings.haptics)
                 showImport = true
             } label: {
-                Text("ファイルを読み込む")
-                    .font(.body.weight(.medium))
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
+                HStack(spacing: 6) {
+                    Image(systemName: "square.and.arrow.down")
+                    Text("ファイルを読み込む")
+                }
+                .font(.body.weight(.medium))
+                .padding(.horizontal, 22)
+                .padding(.vertical, 12)
+                .background(Theme.accent)
+                .foregroundStyle(.white)
+                .clipShape(Capsule())
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Theme.accent)
+            .buttonStyle(ScaleButtonStyle())
+            Spacer()
         }
         .padding(40)
     }
@@ -177,25 +209,29 @@ private struct DeckRowView: View {
         HStack(spacing: 12) {
             // Indentation for hierarchy.
             if row.depth > 0 {
-                Rectangle()
-                    .fill(Theme.separator)
-                    .frame(width: 1)
-                    .padding(.leading, CGFloat(row.depth - 1) * 14)
+                HStack(spacing: 0) {
+                    ForEach(0..<row.depth, id: \.self) { _ in
+                        Rectangle()
+                            .fill(Theme.separator)
+                            .frame(width: 1)
+                            .padding(.horizontal, 6)
+                    }
+                }
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(row.deck.displayName)
                     .font(.body)
                     .foregroundStyle(Theme.textPrimary)
             }
-            Spacer()
+            Spacer(minLength: 8)
             countBadges
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
     }
 
     private var countBadges: some View {
         let c = row.aggregatedCounts
-        return HStack(spacing: 10) {
+        return HStack(spacing: 12) {
             countText(c.new, color: Theme.Count.new)
             countText(c.learning, color: Theme.Count.learning)
             countText(c.review, color: Theme.Count.review)
@@ -206,5 +242,6 @@ private struct DeckRowView: View {
     private func countText(_ value: Int, color: Color) -> some View {
         Text("\(value)")
             .foregroundStyle(value > 0 ? color : Theme.textTertiary)
+            .frame(minWidth: 22, alignment: .trailing)
     }
 }

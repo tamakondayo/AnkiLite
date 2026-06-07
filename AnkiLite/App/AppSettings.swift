@@ -32,6 +32,8 @@ final class AppSettings: ObservableObject {
         static let appearance = "appearance"
         static let rolloverHour = "rolloverHour"
         static let newCardsPerDay = "newCardsPerDay"
+        static let cardFontSize = "cardFontSize"
+        static let haptics = "haptics"
     }
 
     /// Default appearance is dark, per spec.
@@ -48,11 +50,23 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(newCardsPerDay, forKey: Keys.newCardsPerDay) }
     }
 
+    /// Base font size (in px) used by the card WebView.
+    @Published var cardFontSize: Int {
+        didSet { UserDefaults.standard.set(cardFontSize, forKey: Keys.cardFontSize) }
+    }
+
+    /// Whether to play haptic feedback on key actions.
+    @Published var haptics: Bool {
+        didSet { UserDefaults.standard.set(haptics, forKey: Keys.haptics) }
+    }
+
     init() {
         let defaults = UserDefaults.standard
         self.appearance = AppearanceMode(rawValue: defaults.string(forKey: Keys.appearance) ?? "") ?? .dark
         self.rolloverHour = defaults.object(forKey: Keys.rolloverHour) as? Int ?? 4
         self.newCardsPerDay = defaults.object(forKey: Keys.newCardsPerDay) as? Int ?? 20
+        self.cardFontSize = defaults.object(forKey: Keys.cardFontSize) as? Int ?? 22
+        self.haptics = defaults.object(forKey: Keys.haptics) as? Bool ?? true
     }
 
     var schedulerConfig: SchedulerConfig {

@@ -13,6 +13,41 @@ struct SettingsView: View {
                             Text(mode.label).tag(mode)
                         }
                     }
+                    HStack {
+                        Text("カードの文字サイズ")
+                        Spacer()
+                        Text("\(settings.cardFontSize)pt")
+                            .foregroundStyle(Theme.textSecondary)
+                            .monospacedDigit()
+                    }
+                    Slider(value: Binding(
+                        get: { Double(settings.cardFontSize) },
+                        set: { settings.cardFontSize = Int($0) }
+                    ), in: 14...36, step: 1) {
+                        Text("文字サイズ")
+                    } minimumValueLabel: {
+                        Text("A").font(.caption)
+                    } maximumValueLabel: {
+                        Text("A").font(.title3)
+                    }
+                    .tint(Theme.accent)
+                    HStack {
+                        Text("プレビュー")
+                            .font(.caption)
+                            .foregroundStyle(Theme.textSecondary)
+                        Spacer()
+                        Text("見本テキスト Aa あ")
+                            .font(.system(size: CGFloat(settings.cardFontSize)))
+                            .foregroundStyle(Theme.textPrimary)
+                            .lineLimit(1)
+                    }
+                }
+
+                Section("操作") {
+                    Toggle(isOn: $settings.haptics) {
+                        Text("触覚フィードバック")
+                    }
+                    .tint(Theme.accent)
                 }
 
                 Section("学習") {
@@ -20,8 +55,9 @@ struct SettingsView: View {
                         HStack {
                             Text("日付の区切り")
                             Spacer()
-                            Text("\(settings.rolloverHour):00")
+                            Text(String(format: "%02d:00", settings.rolloverHour))
                                 .foregroundStyle(Theme.textSecondary)
+                                .monospacedDigit()
                         }
                     }
                     Stepper(value: $settings.newCardsPerDay, in: 0...999, step: 5) {
@@ -30,6 +66,7 @@ struct SettingsView: View {
                             Spacer()
                             Text("\(settings.newCardsPerDay)")
                                 .foregroundStyle(Theme.textSecondary)
+                                .monospacedDigit()
                         }
                     }
                 }
@@ -46,6 +83,7 @@ struct SettingsView: View {
                         Spacer()
                         Text(Bundle.main.appVersionString)
                             .foregroundStyle(Theme.textSecondary)
+                            .monospacedDigit()
                     }
                 }
             }

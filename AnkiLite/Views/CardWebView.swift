@@ -14,6 +14,8 @@ struct CardWebView: UIViewRepresentable {
     let userCSS: String
     /// Whether to apply the night-mode body class.
     let nightMode: Bool
+    /// Base body font size, in CSS pixels.
+    let fontSize: Int
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -26,11 +28,12 @@ struct CardWebView: UIViewRepresentable {
         webView.isOpaque = false
         webView.backgroundColor = .clear
         webView.scrollView.backgroundColor = .clear
+        webView.scrollView.showsVerticalScrollIndicator = false
         return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        let html = Self.wrap(body: bodyHTML, userCSS: userCSS, nightMode: nightMode)
+        let html = Self.wrap(body: bodyHTML, userCSS: userCSS, nightMode: nightMode, fontSize: fontSize)
         let mediaDir = MediaManager.shared.mediaDirectory
 
         // Write the HTML into the media directory so relative media URLs resolve.
@@ -54,39 +57,46 @@ struct CardWebView: UIViewRepresentable {
         css.contains(".night_mode") || css.contains(".nightMode")
     }
 
-    static func wrap(body: String, userCSS: String, nightMode: Bool) -> String {
+    static func wrap(body: String, userCSS: String, nightMode: Bool, fontSize: Int) -> String {
         let nightClass = nightMode ? "night_mode" : ""
         return """
         <!DOCTYPE html>
-        <html>
+        <html lang="ja">
         <head>
+        <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <style>
         html, body {
           margin: 0;
-          padding: 16px;
+          padding: 20px 18px;
           min-height: 100%;
           box-sizing: border-box;
         }
         body {
-          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-          font-size: 20px;
+          font-family: -apple-system, "Hiragino Sans", BlinkMacSystemFont, sans-serif;
+          font-size: \(fontSize)px;
+          line-height: 1.6;
           text-align: center;
           color: #2b2b2b;
           background-color: transparent;
           word-wrap: break-word;
           -webkit-text-size-adjust: 100%;
+          -webkit-tap-highlight-color: transparent;
         }
-        img { max-width: 100%; height: auto; }
-        body.night_mode {
-          color: #ececec;
-        }
-        body.night_mode img { opacity: 0.9; }
+        img { max-width: 100%; height: auto; border-radius: 6px; }
+        body.night_mode { color: #ececec; }
+        body.night_mode img { opacity: 0.92; }
         .cloze { font-weight: 600; color: #3f6f9d; }
         body.night_mode .cloze { color: #7fa8d0; }
-        hr { border: none; border-top: 1px solid rgba(128,128,128,0.3); margin: 18px 0; }
-        audio { width: 100%; max-width: 320px; margin: 8px 0; }
+        hr { border: none; border-top: 1px solid rgba(128,128,128,0.25); margin: 22px 0; }
+        audio { width: 100%; max-width: 320px; margin: 10px 0; }
         a.hint { color: #5b7a9d; text-decoration: none; }
+        .missing-media {
+          display: inline-block; color: #999;
+          border: 1px dashed rgba(128,128,128,0.4);
+          padding: 6px 12px; border-radius: 8px;
+          font-size: 0.85em;
+        }
         /* User CSS */
         \(userCSS)
         </style>

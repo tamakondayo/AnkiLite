@@ -45,6 +45,7 @@ final class ImportViewModel: ObservableObject {
 
 struct ImportView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var settings: AppSettings
     @StateObject private var viewModel = ImportViewModel()
     @State private var showFilePicker = false
 
@@ -74,6 +75,13 @@ struct ImportView: View {
                     viewModel.phase = .failed(error.localizedDescription)
                 }
             }
+            .onChange(of: viewModel.phase) { _, newPhase in
+                switch newPhase {
+                case .done: Haptics.success(enabled: settings.haptics)
+                case .failed: Haptics.error(enabled: settings.haptics)
+                default: break
+                }
+            }
         }
     }
 
@@ -91,24 +99,45 @@ struct ImportView: View {
         case .idle:
             idleContent
         case .importing(let progress, let message):
-            VStack(spacing: 16) {
-                ProgressView(value: progress)
-                    .tint(Theme.accent)
+            VStack(spacing: 20) {
+                ZStack {
+                    Circle()
+                        .stroke(Theme.separator, lineWidth: 4)
+                        .frame(width: 80, height: 80)
+                    Circle()
+                        .trim(from: 0, to: progress)
+                        .stroke(Theme.accent, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                        .frame(width: 80, height: 80)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.easeInOut, value: progress)
+                    Text("\(Int(progress * 100))%")
+                        .font(.subheadline.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(Theme.textPrimary)
+                }
                 Text(message)
                     .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
             }
         case .done:
-            VStack(spacing: 14) {
-                Image(systemName: "checkmark.circle")
-                    .font(.system(size: 40, weight: .light))
+            VStack(spacing: 18) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 56, weight: .light))
                     .foregroundStyle(Theme.Count.review)
                 Text("インポートが完了しました")
                     .font(.headline)
                     .foregroundStyle(Theme.textPrimary)
-                Button("完了") { dismiss() }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Theme.accent)
+                Button {
+                    dismiss()
+                } label: {
+                    Text("完了")
+                        .font(.body.weight(.medium))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Theme.accent)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
+                }
+                .buttonStyle(ScaleButtonStyle())
             }
         case .failed(let message):
             VStack(spacing: 14) {
@@ -150,15 +179,21 @@ struct ImportView: View {
             .pickerStyle(.segmented)
 
             Button {
+                Haptics.tap(enabled: settings.haptics)
                 showFilePicker = true
             } label: {
-                Text("ファイルを選択")
-                    .font(.body.weight(.medium))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+                HStack(spacing: 6) {
+                    Image(systemName: "folder")
+                    Text("ファイルを選択")
+                }
+                .font(.body.weight(.medium))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Theme.accent)
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Theme.accent)
+            .buttonStyle(ScaleButtonStyle())
         }
     }
 }
