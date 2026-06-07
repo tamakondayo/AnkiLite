@@ -63,7 +63,7 @@ final class StudySession: ObservableObject {
 
     let deck: Deck
     private let database: DatabaseManager
-    private let scheduler: SM2Scheduler
+    private let scheduler: any CardScheduler
     private let crt: Int64
     private var cardStartTime = Date()
     /// Stack of recent reversible actions.
@@ -81,7 +81,7 @@ final class StudySession: ObservableObject {
 
     init(deck: Deck,
          database: DatabaseManager = .shared,
-         scheduler: SM2Scheduler = SM2Scheduler(),
+         scheduler: any CardScheduler = SM2Scheduler(),
          newCardLimit: Int = 0,
          reviewLimit: Int = 0,
          customFilter: CustomStudyFilter? = nil) throws {

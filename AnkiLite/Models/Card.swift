@@ -86,6 +86,12 @@ struct Card: Identifiable, Codable, Hashable, FetchableRecord, PersistableRecord
     var left: Int
     /// Flags bitfield (low 3 bits = colour flag; high bits reserved).
     var flags: Int
+    /// FSRS memory state — stability (days). 0 = uninitialised.
+    var stability: Double
+    /// FSRS memory state — difficulty (1.0…10.0). 0 = uninitialised.
+    var difficulty: Double
+    /// Unix seconds of the last review (for FSRS elapsed-time calculations).
+    var lastReview: Int64
 
     enum Columns {
         static let id = Column("id")
@@ -102,6 +108,9 @@ struct Card: Identifiable, Codable, Hashable, FetchableRecord, PersistableRecord
         static let lapses = Column("lapses")
         static let left = Column("left")
         static let flags = Column("flags")
+        static let stability = Column("stability")
+        static let difficulty = Column("difficulty")
+        static let lastReview = Column("lastReview")
     }
 
     var cardType: CardType {
@@ -139,7 +148,10 @@ struct Card: Identifiable, Codable, Hashable, FetchableRecord, PersistableRecord
          reps: Int = 0,
          lapses: Int = 0,
          left: Int = 0,
-         flags: Int = 0) {
+         flags: Int = 0,
+         stability: Double = 0,
+         difficulty: Double = 0,
+         lastReview: Int64 = 0) {
         self.id = id
         self.nid = nid
         self.did = did
@@ -154,5 +166,8 @@ struct Card: Identifiable, Codable, Hashable, FetchableRecord, PersistableRecord
         self.lapses = lapses
         self.left = left
         self.flags = flags
+        self.stability = stability
+        self.difficulty = difficulty
+        self.lastReview = lastReview
     }
 }

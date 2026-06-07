@@ -80,6 +80,15 @@ enum Schema {
             }
         }
 
+        // v3: FSRS memory state on card.
+        migrator.registerMigration("v3_fsrs") { db in
+            try db.alter(table: Card.databaseTableName) { t in
+                t.add(column: "stability", .double).notNull().defaults(to: 0)
+                t.add(column: "difficulty", .double).notNull().defaults(to: 0)
+                t.add(column: "lastReview", .integer).notNull().defaults(to: 0)
+            }
+        }
+
         return migrator
     }
 }

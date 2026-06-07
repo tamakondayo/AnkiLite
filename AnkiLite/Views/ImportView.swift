@@ -49,6 +49,13 @@ struct ImportView: View {
     @StateObject private var viewModel = ImportViewModel()
     @State private var showFilePicker = false
 
+    /// Optional URL handed in from an Open-in / AirDrop event.
+    let incomingURL: URL?
+
+    init(incomingURL: URL? = nil) {
+        self.incomingURL = incomingURL
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -80,6 +87,11 @@ struct ImportView: View {
                 case .done: Haptics.success(enabled: settings.haptics)
                 case .failed: Haptics.error(enabled: settings.haptics)
                 default: break
+                }
+            }
+            .onAppear {
+                if let incomingURL, viewModel.phase == .idle {
+                    viewModel.importFile(at: incomingURL)
                 }
             }
         }

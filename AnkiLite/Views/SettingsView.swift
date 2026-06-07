@@ -50,6 +50,33 @@ struct SettingsView: View {
                     .tint(Theme.accent)
                 }
 
+                Section {
+                    Picker("スケジューラ", selection: $settings.schedulerKind) {
+                        ForEach(SchedulerKind.allCases) { kind in
+                            Text(kind.label).tag(kind)
+                        }
+                    }
+                    Text(settings.schedulerKind.subtitle)
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                    if settings.schedulerKind == .fsrs {
+                        HStack {
+                            Text("目標保持率")
+                            Spacer()
+                            Text(String(format: "%.0f%%", settings.desiredRetention * 100))
+                                .foregroundStyle(Theme.textSecondary)
+                                .monospacedDigit()
+                        }
+                        Slider(value: $settings.desiredRetention, in: 0.70...0.97, step: 0.01)
+                            .tint(Theme.accent)
+                    }
+                } header: {
+                    Text("学習アルゴリズム")
+                } footer: {
+                    Text("既存カードはそのままで、次のレビューから選んだ方式が適用されます。FSRS は初回レビュー後にメモリ状態を蓄積するため、最初は SM-2 と挙動が似ます。")
+                        .font(.caption)
+                }
+
                 Section("学習") {
                     Stepper(value: $settings.rolloverHour, in: 0...23) {
                         HStack {

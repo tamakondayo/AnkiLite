@@ -131,7 +131,7 @@ struct CustomStudyView: View {
         )
         session = try? StudySession(
             deck: deck,
-            scheduler: SM2Scheduler(config: settings.schedulerConfig),
+            scheduler: settings.makeScheduler(),
             newCardLimit: settings.newCardsPerDay,
             reviewLimit: settings.reviewsPerDay,
             customFilter: filter

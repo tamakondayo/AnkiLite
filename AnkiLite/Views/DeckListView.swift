@@ -73,12 +73,14 @@ final class DeckListViewModel: ObservableObject {
 
 struct DeckListView: View {
     @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var importBus: IncomingImportBus
     @StateObject private var viewModel: DeckListViewModel
     @State private var showImport = false
     @State private var showSettings = false
     @State private var deckToDelete: Deck?
     @State private var shareItem: ShareItem?
     @State private var exportError: String?
+    @State private var newCardDeck: Deck?
 
     init(settings: AppSettings) {
         _viewModel = StateObject(wrappedValue: DeckListViewModel(settings: settings))
@@ -115,13 +117,20 @@ struct DeckListView: View {
                 }
             }
             .sheet(isPresented: $showImport, onDismiss: { viewModel.reload() }) {
-                ImportView()
+                ImportView(incomingURL: importBus.pendingURL)
+                    .onDisappear { importBus.pendingURL = nil }
+            }
+            .onReceive(importBus.$pendingURL) { url in
+                if url != nil { showImport = true }
             }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
             }
             .sheet(item: $shareItem) { item in
                 ShareSheet(items: [item.url])
+            }
+            .sheet(item: $newCardDeck, onDismiss: { viewModel.reload() }) { deck in
+                NewNoteView(initialDeck: deck)
             }
             .alert("書き出しに失敗", isPresented: Binding(get: { exportError != nil },
                                                   set: { if !$0 { exportError = nil } })) {
@@ -191,6 +200,9 @@ struct DeckListView: View {
                     NavigationLink {
                         CustomStudyView(deck: row.deck)
                     } label: { Label("カスタム学習", systemImage: "slider.horizontal.3") }
+                    Button {
+                        newCardDeck = row.deck
+                    } label: { Label("カードを追加", systemImage: "plus.rectangle.on.rectangle") }
                     Button {
                         exportDeck(row.deck)
                     } label: { Label("apkgを書き出す", systemImage: "square.and.arrow.up") }

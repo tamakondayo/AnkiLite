@@ -78,7 +78,7 @@ struct StudyContainerView: View {
         guard session == nil else { return }
         do {
             session = try StudySession(deck: deck,
-                                       scheduler: SM2Scheduler(config: settings.schedulerConfig),
+                                       scheduler: settings.makeScheduler(),
                                        newCardLimit: settings.newCardsPerDay,
                                        reviewLimit: settings.reviewsPerDay)
         } catch {
@@ -106,8 +106,17 @@ struct StudyView: View {
             if session.isFinished {
                 CompletionView(stats: session.stats, settings: settings) { dismiss() }
             } else if let due = session.current {
-                cardArea(for: due)
-                answerArea(for: due)
+                ZStack(alignment: .bottom) {
+                    cardArea(for: due)
+                    if showingAnswer {
+                        answerArea(for: due)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    } else {
+                        tapHint
+                            .transition(.opacity)
+                    }
+                }
+                .animation(.easeInOut(duration: 0.2), value: showingAnswer)
             }
         }
         .background(Theme.background.ignoresSafeArea())
@@ -124,6 +133,22 @@ struct StudyView: View {
         .onChange(of: session.isFinished) { _, finished in
             if finished { Haptics.success(enabled: settings.haptics) }
         }
+    }
+
+    /// Subtle floating hint shown over the front of the card.
+    private var tapHint: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "hand.tap")
+                .font(.caption)
+            Text("タップまたは上にスワイプで答え")
+                .font(.caption)
+        }
+        .foregroundStyle(Theme.textTertiary)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(.ultraThinMaterial, in: Capsule())
+        .padding(.bottom, 18)
+        .allowsHitTesting(false)
     }
 
     // MARK: - Card actions menu (Undo / Bury / Suspend / Flag)
@@ -225,19 +250,29 @@ struct StudyView: View {
                            nightMode: nightMode,
                            fontSize: settings.cardFontSize)
             .background(Theme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
-                    .stroke(Theme.separator, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Theme.separator, lineWidth: 0.5)
             )
-            .shadow(color: Color.black.opacity(0.18), radius: 10, x: 0, y: 4)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
+            .overlay(alignment: .topLeading) {
+                if due.card.colorFlag != .none {
+                    Image(systemName: "flag.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(Color(hex: due.card.colorFlag.hex))
+                        .padding(10)
+                }
+            }
+            .shadow(color: Color.black.opacity(0.22), radius: 12, x: 0, y: 6)
+            .padding(.horizontal, 12)
+            .padding(.top, 10)
+            // Reserve space at the bottom that fits the (taller) answer bar.
+            .padding(.bottom, 96)
             .id("\(due.id)-\(showingAnswer)")
             .offset(x: dragOffset.width, y: dragOffset.height * 0.2)
             .rotationEffect(.degrees(Double(dragOffset.width) / 35))
             .rotation3DEffect(.degrees(flipAngle), axis: (x: 0, y: 1, z: 0), perspective: 0.5)
-            .gesture(swipeGesture(for: due))
+            .gesture(cardGesture(for: due))
             .onTapGesture { revealAnswer() }
             .onChange(of: due.id) { _, _ in
                 showingAnswer = false
@@ -261,58 +296,55 @@ struct StudyView: View {
         }
     }
 
-    private func swipeGesture(for due: StudySession.DueCard) -> some Gesture {
-        DragGesture(minimumDistance: 18)
+    /// Unified gesture:
+    ///   - Front side: any upward swipe (or tap) reveals the answer.
+    ///   - Back side: horizontal swipes commit Again/Good, vertical commits Hard/Easy.
+    private func cardGesture(for due: StudySession.DueCard) -> some Gesture {
+        DragGesture(minimumDistance: 14)
             .onChanged { value in
-                guard showingAnswer else { return }
                 dragOffset = value.translation
             }
             .onEnded { value in
-                guard showingAnswer else { dragOffset = .zero; return }
-                let threshold: CGFloat = 100
-                if value.translation.width < -threshold {
-                    commit(.again, due: due)
-                } else if value.translation.width > threshold {
-                    commit(.good, due: due)
-                } else {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { dragOffset = .zero }
+                let h = value.translation.width
+                let v = value.translation.height
+                let threshold: CGFloat = 90
+
+                if !showingAnswer {
+                    // Front: any reasonable drag (especially upward) reveals.
+                    if abs(h) > threshold || v < -threshold {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { dragOffset = .zero }
+                        revealAnswer()
+                    } else {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { dragOffset = .zero }
+                    }
+                    return
                 }
+
+                // Back: pick the dominant axis.
+                if abs(h) > abs(v) {
+                    if h < -threshold { commit(.again, due: due); return }
+                    if h > threshold { commit(.good, due: due); return }
+                } else {
+                    if v < -threshold { commit(.easy, due: due); return }
+                    if v > threshold { commit(.hard, due: due); return }
+                }
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) { dragOffset = .zero }
             }
     }
 
     // MARK: - Answer area
 
-    @ViewBuilder
     private func answerArea(for due: StudySession.DueCard) -> some View {
-        if showingAnswer {
-            let labels = session.intervalLabels()
-            HStack(spacing: 8) {
-                ForEach(ReviewEase.allCases, id: \.self) { ease in
-                    AnswerButton(ease: ease, intervalText: labels[ease] ?? "") {
-                        commit(ease, due: due)
-                    }
+        let labels = session.intervalLabels()
+        return HStack(spacing: 8) {
+            ForEach(ReviewEase.allCases, id: \.self) { ease in
+                AnswerButton(ease: ease, intervalText: labels[ease] ?? "") {
+                    commit(ease, due: due)
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.bottom, 12)
-            .transition(.opacity.combined(with: .move(edge: .bottom)))
-        } else {
-            Button(action: revealAnswer) {
-                HStack(spacing: 8) {
-                    Image(systemName: "hand.tap")
-                        .font(.subheadline)
-                    Text("答えを表示")
-                        .font(.body.weight(.medium))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Theme.surfaceRaised)
-                .foregroundStyle(Theme.textPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
-            }
-            .padding(.horizontal, 12)
-            .padding(.bottom, 12)
         }
+        .padding(.horizontal, 12)
+        .padding(.bottom, 14)
     }
 
     private func commit(_ ease: ReviewEase, due: StudySession.DueCard) {
