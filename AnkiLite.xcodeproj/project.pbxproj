@@ -26,9 +26,22 @@
 		0A0000000000000000000007 /* AnkiLiteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AnkiLiteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		0A0000000000000000000021 /* Exceptions for "AnkiLite" folder in "AnkiLite" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 0A0000000000000000000004 /* AnkiLite */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0A0000000000000000000008 /* AnkiLite */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0A0000000000000000000021 /* Exceptions for "AnkiLite" folder in "AnkiLite" target */,
+			);
 			path = AnkiLite;
 			sourceTree = "<group>";
 		};

@@ -118,7 +118,7 @@ final class ApkgImportTests: XCTestCase {
         let loaded = try db.card(id: 7)
         XCTAssertEqual(loaded?.ivl, 10)
         XCTAssertEqual(loaded?.cardType, .review)
-        XCTAssertEqual(loaded?.easeFactor, 2.5, accuracy: 0.001)
+        XCTAssertEqual(loaded?.easeFactor ?? 0, 2.5, accuracy: 0.001)
     }
 
     func testDeckCountsByState() throws {
