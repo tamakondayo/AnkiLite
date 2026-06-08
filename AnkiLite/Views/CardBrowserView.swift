@@ -21,6 +21,7 @@ final class CardBrowserViewModel: ObservableObject {
         case new = "新規"
         case learning = "学習中"
         case review = "復習"
+        case buried = "保留中"
         case suspended = "停止中"
         var id: String { rawValue }
     }
@@ -65,6 +66,7 @@ final class CardBrowserViewModel: ObservableObject {
         case .new: sql += " AND card.queue = \(CardQueue.new.rawValue)"
         case .learning: sql += " AND card.queue IN (\(CardQueue.learning.rawValue), \(CardQueue.dayLearning.rawValue))"
         case .review: sql += " AND card.queue = \(CardQueue.review.rawValue)"
+        case .buried: sql += " AND card.queue = \(CardQueue.buried.rawValue)"
         case .suspended: sql += " AND card.queue = \(CardQueue.suspended.rawValue)"
         }
 
@@ -81,7 +83,7 @@ final class CardBrowserViewModel: ObservableObject {
         sql += " ORDER BY note.sfld ASC LIMIT 500"
 
         let cards: [Card] = (try? database.dbQueue.read { db in
-            try Card.fetchAll(db, sql: sql, arguments: StatementArguments(args) ?? StatementArguments())
+            try Card.fetchAll(db, sql: sql, arguments: StatementArguments(args))
         }) ?? []
 
         // Resolve note + noteType + preview text.
@@ -147,6 +149,19 @@ final class CardBrowserViewModel: ObservableObject {
         try? database.saveCard(updated)
         reload()
     }
+
+    /// Restore a suspended/buried card to its natural queue (derived from `type`).
+    func restore(_ card: Card) {
+        var updated = card
+        switch card.cardType {
+        case .new: updated.cardQueue = .new
+        case .learning, .relearning: updated.cardQueue = .learning
+        case .review: updated.cardQueue = .review
+        }
+        updated.mod = Int64(Date().timeIntervalSince1970)
+        try? database.saveCard(updated)
+        reload()
+    }
 }
 
 struct CardBrowserView: View {
@@ -186,6 +201,19 @@ struct CardBrowserView: View {
                                     }
                                 }
                             } label: { Label("フラグ", systemImage: "flag") }
+                        }
+                        .swipeActions(edge: .leading) {
+                            if row.card.cardQueue == .suspended || row.card.cardQueue == .buried {
+                                Button {
+                                    viewModel.restore(row.card)
+                                } label: { Label("復活", systemImage: "play.fill") }
+                                .tint(Theme.Count.review)
+                            } else {
+                                Button {
+                                    viewModel.setQueue(.suspended, on: row.card)
+                                } label: { Label("停止", systemImage: "pause.fill") }
+                                .tint(Theme.textTertiary)
+                            }
                         }
                     }
                 }

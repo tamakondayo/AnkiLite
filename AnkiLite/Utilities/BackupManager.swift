@@ -37,10 +37,14 @@ final class BackupManager {
     }
 
     /// If the last backup is older than 24 hours, run a new one.
+    /// The actual work runs on a background queue so a large collection
+    /// can't stall app launch.
     func runIfDue(iCloudEnabled: Bool) {
         let last = lastBackupDate ?? .distantPast
         if Date().timeIntervalSince(last) < 24 * 3600 { return }
-        try? performBackup(iCloudEnabled: iCloudEnabled)
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            _ = try? self?.performBackup(iCloudEnabled: iCloudEnabled)
+        }
     }
 
     /// Always run a backup, regardless of the last-backup timestamp.

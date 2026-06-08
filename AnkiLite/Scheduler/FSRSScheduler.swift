@@ -201,7 +201,7 @@ struct FSRSScheduler {
             lastIvl: previousIvl,
             factor: Int(s * 1000),
             time: timeTakenMs,
-            type: 1
+            type: rating == 1 ? 2 : 1  // 2 = relearn, 1 = review
         )
         return ScheduleResult(card: card, log: log)
     }

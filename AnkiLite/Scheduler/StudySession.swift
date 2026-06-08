@@ -100,8 +100,34 @@ final class StudySession: ObservableObject {
             .filter { $0.id == deck.id || $0.name.hasPrefix(prefix) }
             .map(\.id)
 
+        Self.autoUnbury(database: database)
         try loadNext()
         refreshCounts()
+    }
+
+    /// At day rollover, restore buried cards to their natural queue derived
+    /// from `type` (new=0 / learning=1 / review=2 / relearning=1).
+    private static func autoUnbury(database: DatabaseManager) {
+        let lastKey = "lastUnburyDay"
+        let now = Int64(Date().timeIntervalSince1970)
+        // Calendar day in the device's current locale.
+        let today = Int(now / 86_400)
+        let lastDay = UserDefaults.standard.integer(forKey: lastKey)
+        guard today != lastDay else { return }
+        try? database.dbQueue.write { db in
+            try db.execute(sql: """
+                UPDATE card
+                SET queue = CASE
+                    WHEN type = 0 THEN 0
+                    WHEN type = 1 THEN 1
+                    WHEN type = 2 THEN 2
+                    WHEN type = 3 THEN 1
+                    ELSE 0
+                END
+                WHERE queue = \(CardQueue.buried.rawValue)
+                """)
+        }
+        UserDefaults.standard.set(today, forKey: lastKey)
     }
 
     var todayDays: Int { scheduler.today(now: Date(), crt: crt) }
@@ -115,15 +141,17 @@ final class StudySession: ObservableObject {
     }
 
     /// Number of brand-new cards already introduced today.
+    /// Counts DISTINCT cards (not log entries) — a single new card is one
+    /// "introduction" even if the user pressed Good twice in learning steps.
     private func newCardsIntroducedToday() -> Int {
         guard !deckIds.isEmpty else { return 0 }
         let placeholders = databaseQuestionMarks(count: deckIds.count)
         let args = StatementArguments(deckIds)
         return (try? database.dbQueue.read { db in
             try Int.fetchOne(db, sql: """
-                SELECT COUNT(*) FROM reviewLog
+                SELECT COUNT(DISTINCT cid) FROM reviewLog
                 WHERE id >= \(self.todayStartMs)
-                  AND lastIvl = 0
+                  AND type = 0
                   AND cid IN (SELECT id FROM card WHERE did IN (\(placeholders)))
                 """, arguments: args) ?? 0
         }) ?? 0
@@ -260,7 +288,6 @@ final class StudySession: ObservableObject {
         guard needsRestrict else { return nil }
 
         let placeholders = databaseQuestionMarks(count: deckIds.count)
-        let args = StatementArguments(deckIds)
         return try database.dbQueue.read { db -> Set<Int64> in
             var sql = """
                 SELECT card.id FROM card
@@ -271,21 +298,17 @@ final class StudySession: ObservableObject {
                 sql += " AND (card.flags & 7) = \(flag.rawValue)"
             }
             if !filter.tags.isEmpty {
-                let tagClauses = filter.tags.map { _ in "note.tags LIKE ?" }.joined(separator: " OR ")
+                let tagClauses = filter.tags.map { _ in
+                    "(' ' || note.tags || ' ') LIKE ?"
+                }.joined(separator: " OR ")
                 sql += " AND (\(tagClauses))"
             }
             var values: [(any DatabaseValueConvertible)?] = deckIds.map { $0 as (any DatabaseValueConvertible)? }
             for tag in filter.tags {
                 values.append("% \(tag) %")
             }
-            // Note.tags is stored with leading/trailing spaces in Anki, but we
-            // also need to match tags without surrounding spaces if present.
-            // Fall back to a looser LIKE pattern by also OR-ing on bare LIKE.
-            // For simplicity here we wrap the tags text with spaces in SQL.
-            sql = sql.replacingOccurrences(of: "note.tags LIKE ?",
-                                            with: "(' ' || note.tags || ' ') LIKE ?")
             let ids = try Int64.fetchAll(db, sql: sql,
-                                         arguments: StatementArguments(values) ?? StatementArguments())
+                                         arguments: StatementArguments(values))
             return Set(ids)
         }
     }
@@ -370,11 +393,11 @@ final class StudySession: ObservableObject {
 
     // MARK: - Bury / Suspend
 
-    /// Buries the current card until tomorrow.
+    /// Buries the current card (hidden today; auto-unburies at day rollover).
     func buryCurrent() throws {
         guard let due = current else { return }
         var updated = due.card
-        updated.cardQueue = .suspended  // simplified: hidden until manually unsuspended
+        updated.cardQueue = .buried
         updated.mod = Int64(Date().timeIntervalSince1970)
 
         pushUndo(UndoStep(previousCard: due.card,

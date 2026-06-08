@@ -17,6 +17,7 @@ struct CustomStudyView: View {
     @State private var availableTags: [String] = []
     @State private var maxCards: Int = 50
     @State private var session: StudySession?
+    @State private var showStudy = false
 
     var body: some View {
         Form {
@@ -73,21 +74,23 @@ struct CustomStudyView: View {
             }
 
             Section {
-                NavigationLink {
-                    if let session = session {
-                        StudyView(session: session)
-                    } else {
-                        Text("カードがありません")
-                            .foregroundStyle(Theme.textSecondary)
-                    }
-                } label: {
-                    Text("学習を開始")
-                        .frame(maxWidth: .infinity)
-                        .foregroundStyle(Theme.accent)
-                }
-                .simultaneousGesture(TapGesture().onEnded {
+                Button {
                     buildSession()
-                })
+                    showStudy = (session != nil)
+                } label: {
+                    HStack {
+                        Spacer()
+                        Text("学習を開始")
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(Theme.accent)
+                        Spacer()
+                    }
+                }
+            }
+        }
+        .navigationDestination(isPresented: $showStudy) {
+            if let session = session {
+                StudyView(session: session)
             }
         }
         .scrollContentBackground(.hidden)
