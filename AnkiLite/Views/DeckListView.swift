@@ -154,6 +154,8 @@ struct DeckListView: View {
                 }
             }
             .background(Theme.background.ignoresSafeArea())
+            .toolbarBackground(Theme.background, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .navigationTitle("デッキ")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -161,8 +163,10 @@ struct DeckListView: View {
                         showSettings = true
                     } label: {
                         Image(systemName: "gearshape")
+                            .font(.body)
+                            .foregroundStyle(Theme.textSecondary)
                     }
-                    .tint(Theme.textSecondary)
+                    .buttonStyle(.plain)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
@@ -188,8 +192,11 @@ struct DeckListView: View {
                         }
                     } label: {
                         Image(systemName: "plus")
+                            .font(.body)
+                            .foregroundStyle(Theme.accent)
                     }
-                    .tint(Theme.accent)
+                    .menuStyle(.button)
+                    .buttonStyle(.plain)
                 }
             }
             .sheet(isPresented: $showImport, onDismiss: { viewModel.reload() }) {

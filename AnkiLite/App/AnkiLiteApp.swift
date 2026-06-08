@@ -33,7 +33,15 @@ struct RootView: View {
     @EnvironmentObject private var settings: AppSettings
 
     var body: some View {
-        DeckListView(settings: settings)
+        ZStack {
+            // Paint the entire window — including the horizontal safe areas
+            // around the dynamic island / home indicator — so iOS 26's
+            // default system background doesn't show through as black bands
+            // on either side of the navigation content.
+            Theme.background
+                .ignoresSafeArea(.all, edges: .all)
+            DeckListView(settings: settings)
+        }
     }
 }
 
