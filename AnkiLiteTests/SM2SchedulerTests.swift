@@ -24,10 +24,17 @@ final class SM2SchedulerTests: XCTestCase {
 
     func testNewCardGoodEntersLearning() {
         let scheduler = makeScheduler()
-        let result = scheduler.answer(card: newCard(), ease: .good, crt: 0)
+        let now = Date()
+        let result = scheduler.answer(card: newCard(), ease: .good, now: now, crt: 0)
         XCTAssertEqual(result.card.cardType, .learning)
         XCTAssertEqual(result.card.cardQueue, .learning)
         XCTAssertEqual(result.card.reps, 1)
+        // First Good should schedule the next view at the first step (1 minute),
+        // NOT graduate to a 1-day review.
+        let expected = Int64(now.timeIntervalSince1970) + 60
+        XCTAssertEqual(result.card.due, expected,
+                       "First Good on a new card must wait ~1 minute, not graduate")
+        XCTAssertEqual(result.card.ivl, 0)
     }
 
     func testNewCardAgainStaysAtFirstStep() {
@@ -42,6 +49,20 @@ final class SM2SchedulerTests: XCTestCase {
         let result = scheduler.answer(card: newCard(), ease: .easy, crt: 0)
         XCTAssertEqual(result.card.cardType, .review)
         XCTAssertEqual(result.card.ivl, SchedulerConfig.default.easyIntervalDays)
+    }
+
+    func testNewCardOutOfRangeLeftDoesNotGraduate() {
+        // Regression: cards imported from .apkg use Anki's `left` encoding,
+        // which would otherwise be interpreted as "completed steps" and
+        // immediately graduate the card. The scheduler must sanitize this.
+        let scheduler = makeScheduler()
+        var card = newCard()
+        card.left = 1003 // Anki "1 step remaining, 3 reps today"
+
+        let result = scheduler.answer(card: card, ease: .good, crt: 0)
+        XCTAssertEqual(result.card.cardType, .learning,
+                       "Sanitized left must not cause immediate graduation")
+        XCTAssertEqual(result.card.ivl, 0)
     }
 
     func testLearningGraduatesAfterAllSteps() {

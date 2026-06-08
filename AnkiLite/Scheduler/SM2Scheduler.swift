@@ -115,7 +115,11 @@ struct SM2Scheduler {
                                steps: [Int],
                                isRelearn: Bool) {
         let stepCount = max(steps.count, 1)
-        var completed = card.left
+        // Sanitize: legitimate values are 0…stepCount (where stepCount means
+        // "all steps shown, the next Good graduates"). Anything outside that
+        // range — notably Anki's foreign `left` encoding on imported cards
+        // (e.g. 1003) — gets reset so we don't accidentally skip ahead.
+        var completed = (card.left >= 0 && card.left <= stepCount) ? card.left : 0
 
         switch ease {
         case .again:

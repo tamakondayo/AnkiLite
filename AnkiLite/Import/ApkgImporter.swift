@@ -170,20 +170,31 @@ final class ApkgImporter {
                 SELECT id, nid, did, ord, mod, type, queue, due, ivl, factor, reps, lapses, "left", flags FROM cards
                 """)
             while let row = try cardRows.next() {
+                // Anki encodes `left` as "remaining_steps * 1000 + today_count",
+                // while this app uses it as "completed_steps". Renumber on import:
+                // - new cards stay at 0
+                // - (re)learning cards restart their learning sequence from step 0
+                // - review cards keep whatever (they ignore `left`)
+                let importedType = row["type"] as Int? ?? 0
+                let importedLeft: Int
+                switch importedType {
+                case 0, 1, 3: importedLeft = 0   // new / learning / relearning → fresh
+                default:      importedLeft = 0   // review and others — `left` is unused
+                }
                 cards.append(Card(
                     id: row["id"],
                     nid: row["nid"],
                     did: row["did"],
                     ord: row["ord"] ?? 0,
                     mod: row["mod"] ?? 0,
-                    type: row["type"] ?? 0,
+                    type: importedType,
                     queue: row["queue"] ?? 0,
                     due: row["due"] ?? 0,
                     ivl: row["ivl"] ?? 0,
                     factor: (row["factor"] as Int?).map { $0 == 0 ? 2500 : $0 } ?? 2500,
                     reps: row["reps"] ?? 0,
                     lapses: row["lapses"] ?? 0,
-                    left: row["left"] ?? 0,
+                    left: importedLeft,
                     flags: row["flags"] ?? 0
                 ))
             }

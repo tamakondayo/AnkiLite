@@ -248,10 +248,6 @@ final class StudySession: ObservableObject {
                 """, arguments: args) {
                 return newCard
             }
-            // 4. If only the excluded card remains, re-show it.
-            if let exclude {
-                return try Card.fetchOne(db, sql: "SELECT * FROM card WHERE id = ?", arguments: [exclude])
-            }
             return nil
         }
     }
