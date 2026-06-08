@@ -85,11 +85,67 @@ struct FSRSScheduler {
     // MARK: - Public answer entry point
 
     /// Apply an answer to a card, returning the updated card + review log.
+    ///
+    /// New and learning cards go through the standard learning steps first
+    /// (this matches Anki's behaviour: FSRS only governs review intervals,
+    /// not the initial learning sequence). At graduation we seed the FSRS
+    /// memory state and switch the card to a FSRS-driven interval.
     func answer(card input: Card,
                 ease: ReviewEase,
                 now: Date = Date(),
                 crt: Int64,
                 timeTakenMs: Int = 0) -> ScheduleResult {
+        // Route new/learning/relearning cards through SM-2's learning step
+        // machinery first; only graduated cards run through FSRS proper.
+        if input.cardType == .new || input.cardType == .learning || input.cardType == .relearning {
+            return learningPath(card: input, ease: ease, now: now, crt: crt, timeTakenMs: timeTakenMs)
+        }
+        return reviewPath(card: input, ease: ease, now: now, crt: crt, timeTakenMs: timeTakenMs)
+    }
+
+    /// Drives the learning/relearning portion using SM-2's step logic, then
+    /// reaches into FSRS to (re)initialise the memory state on graduation.
+    private func learningPath(card input: Card,
+                              ease: ReviewEase,
+                              now: Date,
+                              crt: Int64,
+                              timeTakenMs: Int) -> ScheduleResult {
+        let sm2 = SM2Scheduler()
+        var result = sm2.answer(card: input,
+                                ease: ease,
+                                now: now,
+                                crt: crt,
+                                timeTakenMs: timeTakenMs)
+
+        let nowSec = Int64(now.timeIntervalSince1970)
+        let rating = ease.rawValue
+
+        if result.card.cardType == .review {
+            // Graduated by SM-2; seed FSRS memory and override the interval
+            // so the next review is FSRS-driven rather than the SM-2 flat 1 day.
+            let s = initialStability(rating: rating)
+            let d = initialDifficulty(rating: rating)
+            result.card.stability = s
+            result.card.difficulty = d
+            result.card.lastReview = nowSec
+
+            let interval = nextInterval(stability: s)
+            result.card.ivl = interval
+            let todayDays = Int((nowSec - crt) / 86_400)
+            result.card.due = Int64(todayDays + interval)
+
+            result.log.ivl = result.card.ivl
+            result.log.factor = Int(s * 1000)
+        }
+        return result
+    }
+
+    /// Standard FSRS update path for cards already in the review queue.
+    private func reviewPath(card input: Card,
+                            ease: ReviewEase,
+                            now: Date,
+                            crt: Int64,
+                            timeTakenMs: Int) -> ScheduleResult {
         var card = input
         let rating = ease.rawValue
         let nowSec = Int64(now.timeIntervalSince1970)
@@ -107,7 +163,6 @@ struct FSRSScheduler {
             let r = retrievability(elapsedDays: elapsed, stability: card.stability)
             d = nextDifficulty(d: card.difficulty, rating: rating)
             if rating == 1 {
-                // Failed review → fall back to failStability and treat as relearning.
                 s = failStability(d: card.difficulty, s: card.stability, r: r)
                 card.lapses += 1
             } else {
@@ -122,17 +177,17 @@ struct FSRSScheduler {
         card.mod = nowSec
 
         if rating == 1 {
-            // Lapse → 1-day reset for the next due, but keep the FSRS memory state.
+            // Lapse → relearning queue, FSRS memory preserved.
             card.ivl = 1
             card.cardType = .relearning
             card.cardQueue = .learning
-            card.due = nowSec + 600 // 10 minutes
+            card.left = 0
+            card.due = nowSec + 600
         } else {
             let interval = nextInterval(stability: s)
             card.ivl = interval
             card.cardType = .review
             card.cardQueue = .review
-            // Convert today + interval into the days-since-crt schema.
             let todayDays = Int((nowSec - crt) / 86_400)
             card.due = Int64(todayDays + interval)
         }
@@ -163,6 +218,12 @@ struct FSRSScheduler {
     }
 
     private func previewLabel(for card: Card, ease: ReviewEase) -> String {
+        // New/learning/relearning previews defer to SM-2's step labels so the
+        // bottom button row matches what answering will actually do.
+        if card.cardType == .new || card.cardType == .learning || card.cardType == .relearning {
+            return SM2Scheduler().previewIntervals(for: card)[ease] ?? ""
+        }
+
         let rating = ease.rawValue
         let isFirst = card.stability == 0
         let s: Double
