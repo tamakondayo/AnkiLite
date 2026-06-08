@@ -65,7 +65,10 @@ final class ApkgExporter {
         let outURL = destination.appendingPathComponent("\(safeName).apkg")
         try? fm.removeItem(at: outURL)
 
-        guard let archive = Archive(url: outURL, accessMode: .create) else {
+        let archive: Archive
+        do {
+            archive = try Archive(url: outURL, accessMode: .create)
+        } catch {
             throw ExportError.zipFailure
         }
         for entry in try fm.contentsOfDirectory(atPath: work.path) {

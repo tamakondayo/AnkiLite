@@ -145,24 +145,13 @@ struct NewNoteView: View {
     }
 
     private func addNote(noteType: NoteType, deck: Deck, fields: [String], tags: String) throws {
-        // Anki uses ms timestamps for ids; offset cards by their ord to keep them unique.
-        let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
         let flds = fields.joined(separator: ankiFieldSeparator)
         let sfld = fields.first ?? ""
         let normalizedTags = tags
             .split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" })
             .map(String.init)
             .joined(separator: " ")
-
-        let note = Note(
-            id: nowMs,
-            guid: UUID().uuidString,
-            mid: noteType.id,
-            mod: Int64(Date().timeIntervalSince1970),
-            tags: normalizedTags,
-            flds: flds,
-            sfld: sfld
-        )
+        let nowSec = Int64(Date().timeIntervalSince1970)
 
         // Determine the ords for the cards to generate.
         let ords: [Int]
@@ -174,14 +163,32 @@ struct NewNoteView: View {
         }
 
         try DatabaseManager.shared.dbQueue.write { db in
+            // Allocate ids that are guaranteed not to collide with existing ones,
+            // even when the user taps "Add" multiple times within the same ms.
+            let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+            let maxNoteId = try Int64.fetchOne(db, sql: "SELECT MAX(id) FROM \(Note.databaseTableName)") ?? 0
+            let maxCardId = try Int64.fetchOne(db, sql: "SELECT MAX(id) FROM \(Card.databaseTableName)") ?? 0
+            let noteId = max(nowMs, maxNoteId + 1)
+            var cardId = max(nowMs, maxCardId + 1)
+
+            let note = Note(
+                id: noteId,
+                guid: UUID().uuidString,
+                mid: noteType.id,
+                mod: nowSec,
+                tags: normalizedTags,
+                flds: flds,
+                sfld: sfld
+            )
             try note.insert(db)
-            for (i, ord) in ords.enumerated() {
+
+            for ord in ords {
                 let card = Card(
-                    id: nowMs + Int64(i + 1),
+                    id: cardId,
                     nid: note.id,
                     did: deck.id,
                     ord: ord,
-                    mod: Int64(Date().timeIntervalSince1970),
+                    mod: nowSec,
                     type: CardType.new.rawValue,
                     queue: CardQueue.new.rawValue,
                     due: Int64(nowMs),
@@ -189,6 +196,7 @@ struct NewNoteView: View {
                     factor: 2500
                 )
                 try card.insert(db)
+                cardId += 1
             }
         }
     }

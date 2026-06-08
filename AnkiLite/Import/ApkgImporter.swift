@@ -64,7 +64,10 @@ final class ApkgImporter {
         defer { try? FileManager.default.removeItem(at: workDir) }
 
         // 1. Unzip.
-        guard let archive = Archive(url: url, accessMode: .read) else {
+        let archive: Archive
+        do {
+            archive = try Archive(url: url, accessMode: .read)
+        } catch {
             throw ImportError.cannotOpenArchive
         }
         try extractArchive(archive, to: workDir)

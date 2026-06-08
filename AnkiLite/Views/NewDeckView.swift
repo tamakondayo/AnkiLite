@@ -95,11 +95,13 @@ struct NewDeckView: View {
             return
         }
 
-        let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
-        let deck = Deck(id: nowMs, name: finalName, mod: nowMs / 1000)
-
         do {
             try DatabaseManager.shared.dbQueue.write { db in
+                let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+                let maxId = try Int64.fetchOne(db,
+                    sql: "SELECT MAX(id) FROM \(Deck.databaseTableName)") ?? 0
+                let id = max(nowMs, maxId + 1)
+                let deck = Deck(id: id, name: finalName, mod: nowMs / 1000)
                 try deck.insert(db)
             }
             Haptics.success(enabled: settings.haptics)

@@ -48,6 +48,15 @@ struct CardWebView: UIViewRepresentable {
 
     final class Coordinator {
         let id = UUID().uuidString
+
+        deinit {
+            // Clean up the scratch HTML file when this CardWebView goes away.
+            // Without this, every card view would leave a `__card_<uuid>.html`
+            // file in the media directory forever.
+            let mediaDir = MediaManager.shared.mediaDirectory
+            let fileURL = mediaDir.appendingPathComponent("__card_\(id).html")
+            try? FileManager.default.removeItem(at: fileURL)
+        }
     }
 
     // MARK: - HTML wrapping

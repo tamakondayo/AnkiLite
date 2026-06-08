@@ -8,9 +8,11 @@ struct SettingsView: View {
     @State private var shareItem: ShareItem?
 
     private var lastBackupLabel: String {
-        guard let date = BackupManager.shared.lastBackupDate else { return "未実行" }
+        guard let date = BackupManager.shared.lastBackupDate else {
+            return String(localized: "未実行")
+        }
         let f = RelativeDateTimeFormatter()
-        f.locale = Locale(identifier: "ja_JP")
+        f.locale = settings.locale
         return f.localizedString(for: date, relativeTo: Date())
     }
 

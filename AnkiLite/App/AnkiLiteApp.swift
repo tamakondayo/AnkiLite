@@ -19,6 +19,9 @@ struct AnkiLiteApp: App {
                 .task {
                     // Daily backup check (no-op if last backup is fresh).
                     BackupManager.shared.runIfDue(iCloudEnabled: settings.iCloudBackup)
+                    // Cold-launch sweep for orphan scratch HTML files
+                    // that a crashed previous session may have left behind.
+                    MediaManager.shared.sweepScratchFiles()
                 }
         }
     }

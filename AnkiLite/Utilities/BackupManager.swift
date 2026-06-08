@@ -63,7 +63,10 @@ final class BackupManager {
         // Build the archive in a temp location then move into place atomically.
         let tempURL = fm.temporaryDirectory
             .appendingPathComponent("backup-\(UUID().uuidString).zip")
-        guard let archive = Archive(url: tempURL, accessMode: .create) else {
+        let archive: Archive
+        do {
+            archive = try Archive(url: tempURL, accessMode: .create)
+        } catch {
             throw NSError(domain: "BackupManager", code: 1, userInfo: [
                 NSLocalizedDescriptionKey: "バックアップアーカイブを作成できませんでした。"
             ])

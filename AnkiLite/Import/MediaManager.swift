@@ -74,4 +74,14 @@ final class MediaManager {
         try? FileManager.default.createDirectory(at: mediaDirectory,
                                                  withIntermediateDirectories: true)
     }
+
+    /// Sweeps leftover `__card_*.html` scratch files (in case a previous
+    /// session ended before CardWebView's coordinator could clean them up).
+    func sweepScratchFiles() {
+        let fm = FileManager.default
+        let files = (try? fm.contentsOfDirectory(atPath: mediaDirectory.path)) ?? []
+        for name in files where name.hasPrefix("__card_") && name.hasSuffix(".html") {
+            try? fm.removeItem(at: mediaDirectory.appendingPathComponent(name))
+        }
+    }
 }
