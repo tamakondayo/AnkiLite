@@ -9,14 +9,16 @@ enum Theme {
 
     // MARK: - Surfaces (dark)
 
-    /// App background — near-black neutral, not pure black.
-    static let background = Color(hex: "#111113")
-    /// Elevated surface (cards, rows).
-    static let surface = Color(hex: "#1b1b1e")
+    /// App background — true black, so it merges with the iOS 26 system
+    /// surface around the navigation container (no visible side gutters).
+    static let background = Color.black
+    /// Elevated surface (cards, rows) — slightly lifted off pure black so
+    /// content still reads as a separate plane.
+    static let surface = Color(hex: "#161618")
     /// A slightly higher surface for nested content.
-    static let surfaceRaised = Color(hex: "#232327")
+    static let surfaceRaised = Color(hex: "#202023")
     /// Hairline separators.
-    static let separator = Color.white.opacity(0.08)
+    static let separator = Color.white.opacity(0.09)
 
     // MARK: - Text
 

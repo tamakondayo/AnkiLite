@@ -1,9 +1,44 @@
 import SwiftUI
+import UIKit
 
 @main
 struct AnkiLiteApp: App {
     @StateObject private var settings = AppSettings()
     @StateObject private var importBus = IncomingImportBus()
+
+    init() {
+        Self.applyGlobalAppearance()
+    }
+
+    /// iOS 26 doesn't let SwiftUI's `.background()` paint past the
+    /// horizontal safe-area gutters on its own — the system fills those
+    /// strips with the window's UIKit background, which defaults to black.
+    /// We override the window background here, plus the navigation bar
+    /// and any scroll view background, so the whole surface stays one
+    /// consistent colour.
+    private static func applyGlobalAppearance() {
+        let bg = UIColor(Theme.background)
+
+        // The window itself (kills the side gutters).
+        UIWindow.appearance().backgroundColor = bg
+
+        // Navigation bar — opaque so iOS 26's translucent material
+        // doesn't blend in the system colour.
+        let nav = UINavigationBarAppearance()
+        nav.configureWithOpaqueBackground()
+        nav.backgroundColor = bg
+        nav.shadowColor = .clear
+        UINavigationBar.appearance().standardAppearance = nav
+        UINavigationBar.appearance().scrollEdgeAppearance = nav
+        UINavigationBar.appearance().compactAppearance = nav
+        UINavigationBar.appearance().compactScrollEdgeAppearance = nav
+
+        // Lists / Forms come with their own backing UIScrollView, which
+        // can also show through if we don't make it transparent.
+        UIScrollView.appearance().backgroundColor = .clear
+        UITableView.appearance().backgroundColor = .clear
+        UICollectionView.appearance().backgroundColor = .clear
+    }
 
     var body: some Scene {
         WindowGroup {
