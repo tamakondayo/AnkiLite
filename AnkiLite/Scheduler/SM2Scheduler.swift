@@ -107,7 +107,12 @@ struct SM2Scheduler {
 
     // MARK: - Learning / relearning
 
-    /// `left` is reused as "number of steps already completed".
+    /// Mirrors Anki's `rslib/src/scheduler/states/learning.rs` + `steps.rs`.
+    ///
+    /// `card.left` here is the **current step index** (0-based). When the
+    /// user presses Good, the card advances to step `idx+1` and waits the
+    /// delay of *that next step* — NOT the delay of the current step. When
+    /// the next step is past the end of the array, the card graduates.
     private func applyLearning(_ card: inout Card,
                                ease: ReviewEase,
                                now: Date,
@@ -115,36 +120,37 @@ struct SM2Scheduler {
                                steps: [Int],
                                isRelearn: Bool) {
         let stepCount = max(steps.count, 1)
-        // Sanitize: legitimate values are 0…stepCount (where stepCount means
-        // "all steps shown, the next Good graduates"). Anything outside that
-        // range — notably Anki's foreign `left` encoding on imported cards
-        // (e.g. 1003) — gets reset so we don't accidentally skip ahead.
-        var completed = (card.left >= 0 && card.left <= stepCount) ? card.left : 0
+        // Sanitize against foreign / impossible values. Valid range here is
+        // 0 ..< stepCount (idx == stepCount would mean "graduated" and the
+        // card shouldn't be in the learning queue any more).
+        let idx = (card.left >= 0 && card.left < stepCount) ? card.left : 0
 
         switch ease {
         case .again:
-            completed = 0
-            scheduleLearningStep(&card, stepMinutes: steps.first ?? 1, now: now, completed: completed, isRelearn: isRelearn)
+            // Restart from the very first step.
+            scheduleLearningStep(&card, stepMinutes: steps[0], now: now, completed: 0, isRelearn: isRelearn)
 
         case .hard:
-            // Anki's behaviour: Hard schedules the card between the current
-            // step and the next one, so it's clearly slower than Good but
-            // not as drastic as Again. Stays on the same step.
-            let index = min(completed, stepCount - 1)
-            let current = steps[index]
-            let next = index + 1 < stepCount ? steps[index + 1] : current * 2
-            let hardMinutes = max(1, (current + next + 1) / 2)
-            scheduleLearningStep(&card, stepMinutes: hardMinutes, now: now, completed: completed, isRelearn: isRelearn)
+            // Hard stays on the current step. On the very first step we
+            // average with the next so it sits clearly between Again and
+            // Good rather than colliding with Again.
+            let hardMinutes: Int
+            if idx == 0 {
+                let next = stepCount > 1 ? steps[1] : steps[0] * 2
+                hardMinutes = max(1, (steps[0] + next + 1) / 2)
+            } else {
+                hardMinutes = steps[idx]
+            }
+            scheduleLearningStep(&card, stepMinutes: hardMinutes, now: now, completed: idx, isRelearn: isRelearn)
 
         case .good:
-            if completed >= stepCount {
-                // All steps already shown → graduate to review.
+            // Advance to the next step; graduate if there isn't one.
+            let nextIdx = idx + 1
+            if nextIdx >= stepCount {
                 graduate(&card, now: now, crt: crt, easy: false, isRelearn: isRelearn)
             } else {
-                // Schedule the current step's delay and advance the counter.
-                let stepMinutes = steps[completed]
-                completed += 1
-                scheduleLearningStep(&card, stepMinutes: stepMinutes, now: now, completed: completed, isRelearn: isRelearn)
+                scheduleLearningStep(&card, stepMinutes: steps[nextIdx],
+                                     now: now, completed: nextIdx, isRelearn: isRelearn)
             }
 
         case .easy:
@@ -252,25 +258,30 @@ struct SM2Scheduler {
         case .new, .learning, .relearning:
             let steps = card.cardType == .relearning ? config.relearningStepsMinutes : config.learningStepsMinutes
             let stepCount = max(steps.count, 1)
-            // Sanitize against foreign `left` encodings the same way
-            // `applyLearning` does.
-            let leftIndex = (card.left >= 0 && card.left <= stepCount) ? card.left : 0
+            // Mirrors `applyLearning` — same Anki semantics:
+            //   Again: back to first step
+            //   Hard : stay on current step (averaged with next on idx 0)
+            //   Good : advance to next step (or graduate)
+            //   Easy : graduate at the easy interval
+            let idx = (card.left >= 0 && card.left < stepCount) ? card.left : 0
             switch ease {
             case .again:
-                return Double((steps.first ?? 1) * 60)
+                return Double(steps[0] * 60)
             case .hard:
-                let index = min(leftIndex, stepCount - 1)
-                let current = steps[index]
-                let next = index + 1 < stepCount ? steps[index + 1] : current * 2
-                let hardMinutes = max(1, (current + next + 1) / 2)
+                let hardMinutes: Int
+                if idx == 0 {
+                    let next = stepCount > 1 ? steps[1] : steps[0] * 2
+                    hardMinutes = max(1, (steps[0] + next + 1) / 2)
+                } else {
+                    hardMinutes = steps[idx]
+                }
                 return Double(hardMinutes * 60)
             case .good:
-                // Mirrors `applyLearning`: graduate once all steps are shown,
-                // otherwise schedule the current step's delay.
-                if leftIndex >= stepCount {
+                let nextIdx = idx + 1
+                if nextIdx >= stepCount {
                     return Double(config.graduatingIntervalDays) * 86400
                 }
-                return Double(steps[leftIndex] * 60)
+                return Double(steps[nextIdx] * 60)
             case .easy:
                 return Double(config.easyIntervalDays) * 86400
             }

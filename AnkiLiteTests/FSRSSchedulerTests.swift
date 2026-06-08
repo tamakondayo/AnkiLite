@@ -22,24 +22,22 @@ final class FSRSSchedulerTests: XCTestCase {
         let result = scheduler.answer(card: newCard(), ease: .good, now: now, crt: 0)
 
         XCTAssertEqual(result.card.cardType, .learning,
-                       "First Good on new card must stay in learning queue")
+                       "First Good on a new card must stay in learning queue")
         XCTAssertEqual(result.card.cardQueue, .learning)
-        // Should be ~1 minute away, not 3 days.
-        let expected = Int64(now.timeIntervalSince1970) + 60
+        // Matches Anki upstream: first Good advances to the next step (10m).
+        let expected = Int64(now.timeIntervalSince1970) + 10 * 60
         XCTAssertEqual(result.card.due, expected,
-                       "First Good should schedule the 1-minute learning step")
+                       "First Good should schedule the NEXT learning step (10m)")
         XCTAssertEqual(result.card.stability, 0,
                        "FSRS memory state must NOT be seeded until graduation")
     }
 
-    /// After two Goods (passing through the [1m, 10m] steps), a third Good
-    /// graduates the card and FSRS takes over the interval calculation.
-    func testThirdGoodGraduatesAndSeedsFSRS() {
+    /// Two Goods (advance to step 1, then graduate) hand off to FSRS.
+    func testSecondGoodGraduatesAndSeedsFSRS() {
         let scheduler = makeScheduler()
         var card = newCard()
-        card = scheduler.answer(card: card, ease: .good, crt: 0).card  // step 1
-        card = scheduler.answer(card: card, ease: .good, crt: 0).card  // step 2
-        card = scheduler.answer(card: card, ease: .good, crt: 0).card  // graduate
+        card = scheduler.answer(card: card, ease: .good, crt: 0).card  // → step 1
+        card = scheduler.answer(card: card, ease: .good, crt: 0).card  // → graduate
 
         XCTAssertEqual(card.cardType, .review,
                        "Card should graduate to review after all learning steps")

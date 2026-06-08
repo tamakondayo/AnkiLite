@@ -29,11 +29,11 @@ final class SM2SchedulerTests: XCTestCase {
         XCTAssertEqual(result.card.cardType, .learning)
         XCTAssertEqual(result.card.cardQueue, .learning)
         XCTAssertEqual(result.card.reps, 1)
-        // First Good should schedule the next view at the first step (1 minute),
-        // NOT graduate to a 1-day review.
-        let expected = Int64(now.timeIntervalSince1970) + 60
+        // Matches Anki upstream (steps [1m, 10m]):
+        //   new + Good → advance to step 1 → wait 10 minutes.
+        let expected = Int64(now.timeIntervalSince1970) + 10 * 60
         XCTAssertEqual(result.card.due, expected,
-                       "First Good on a new card must wait ~1 minute, not graduate")
+                       "First Good on a new card must wait the NEXT step (10m), not the first")
         XCTAssertEqual(result.card.ivl, 0)
     }
 
@@ -82,11 +82,10 @@ final class SM2SchedulerTests: XCTestCase {
 
     func testLearningGraduatesAfterAllSteps() {
         let scheduler = makeScheduler()
-        // Default steps [1, 10] → three Good presses to graduate.
+        // Default steps [1m, 10m] → TWO Good presses graduate the card
+        // (matches Anki: first Good moves to step 1, second Good exits).
         var card = newCard()
         card = scheduler.answer(card: card, ease: .good, crt: 0).card // step 1
-        XCTAssertEqual(card.cardType, .learning)
-        card = scheduler.answer(card: card, ease: .good, crt: 0).card // step 2
         XCTAssertEqual(card.cardType, .learning)
         card = scheduler.answer(card: card, ease: .good, crt: 0).card // graduate
         XCTAssertEqual(card.cardType, .review)
