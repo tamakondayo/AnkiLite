@@ -436,6 +436,7 @@
       }
     },
     "カードがありません" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1195,6 +1196,9 @@
         }
       }
     },
+    "停止" : {
+
+    },
     "停止する（学習対象外）" : {
       "localizations" : {
         "en" : {
@@ -1433,6 +1437,9 @@
         }
       }
     },
+    "復活" : {
+
+    },
     "復習" : {
       "localizations" : {
         "en" : {
@@ -1568,7 +1575,6 @@
       }
     },
     "未実行" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

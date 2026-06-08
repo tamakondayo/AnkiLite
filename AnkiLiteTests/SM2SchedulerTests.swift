@@ -51,6 +51,21 @@ final class SM2SchedulerTests: XCTestCase {
         XCTAssertEqual(result.card.ivl, SchedulerConfig.default.easyIntervalDays)
     }
 
+    func testNewCardHardIsDistinctFromGood() {
+        // With default steps [1m, 10m], Hard on a new card should be the
+        // average of step 0 (1m) and step 1 (10m) ≈ 6m — not just 1m
+        // like Good. Otherwise the user sees identical labels on Hard
+        // and Good which makes the buttons feel broken.
+        let scheduler = makeScheduler()
+        let now = Date()
+        let result = scheduler.answer(card: newCard(), ease: .hard, now: now, crt: 0)
+
+        let expected = Int64(now.timeIntervalSince1970) + 6 * 60
+        XCTAssertEqual(result.card.due, expected,
+                       "Hard on a new card should be ~6 minutes (mid-step), not 1")
+        XCTAssertEqual(result.card.cardType, .learning)
+    }
+
     func testNewCardOutOfRangeLeftDoesNotGraduate() {
         // Regression: cards imported from .apkg use Anki's `left` encoding,
         // which would otherwise be interpreted as "completed steps" and

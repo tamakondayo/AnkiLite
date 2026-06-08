@@ -56,6 +56,59 @@ final class FSRSSchedulerTests: XCTestCase {
         XCTAssertEqual(result.card.stability, 0)
     }
 
+    // MARK: - Numerical conformance with fsrs-rs (FSRS-6 defaults)
+
+    /// `init_stability(Good) == w[2] == 2.3065`.
+    func testInitStabilityMatchesUpstreamWeights() {
+        let scheduler = makeScheduler()
+        // First Good on a fresh review card seeds stability from w[2].
+        var card = newCard()
+        card.cardType = .review
+        card.cardQueue = .review
+        let result = scheduler.answer(card: card, ease: .good, crt: 0)
+        XCTAssertEqual(result.card.stability, 2.3065, accuracy: 0.0001)
+    }
+
+    /// At desired retention 0.9 the first interval from `s ≈ 2.31` is ~2 days
+    /// (FSRS-6 default decay 0.1542).
+    func testFirstReviewIntervalAroundExpectedDays() {
+        let scheduler = makeScheduler()
+        var card = newCard()
+        card.cardType = .review
+        card.cardQueue = .review
+        let result = scheduler.answer(card: card, ease: .good, crt: 0)
+        // Hand-computed: 2.3065 / 0.9795 * (1.9796 - 1) ≈ 2.31 → rounded → 2
+        XCTAssertEqual(result.card.ivl, 2)
+    }
+
+    /// FSRS-6 forgetting curve: at s = t = 5 days, retrievability ≈ 0.879.
+    /// (Hand-computed: (5/5 * 0.9795 + 1)^(-0.1542) ≈ 0.900.)
+    func testForgettingCurveAtUnitTime() {
+        let scheduler = makeScheduler()
+        let r = scheduler.retrievability(elapsedDays: 5, stability: 5)
+        XCTAssertEqual(r, 0.9, accuracy: 0.01)
+    }
+
+    /// Higher difficulty → smaller stability growth on Good than lower difficulty.
+    func testDifficultyReducesStabilityGrowth() {
+        let scheduler = makeScheduler()
+        var easy = newCard()
+        easy.cardType = .review; easy.cardQueue = .review
+        easy.stability = 10; easy.difficulty = 2
+        easy.lastReview = Int64(Date().timeIntervalSince1970) - 10 * 86_400
+
+        var hard = newCard()
+        hard.cardType = .review; hard.cardQueue = .review
+        hard.stability = 10; hard.difficulty = 8
+        hard.lastReview = Int64(Date().timeIntervalSince1970) - 10 * 86_400
+
+        let easyResult = scheduler.answer(card: easy, ease: .good, crt: 0)
+        let hardResult = scheduler.answer(card: hard, ease: .good, crt: 0)
+
+        XCTAssertGreaterThan(easyResult.card.stability, hardResult.card.stability,
+                             "Easier cards (low difficulty) should grow more on Good")
+    }
+
     func testReviewCardGoodUsesFSRSStabilityUpdate() {
         let scheduler = makeScheduler()
         // Manually seeded review card (already graduated).

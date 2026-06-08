@@ -127,9 +127,14 @@ struct SM2Scheduler {
             scheduleLearningStep(&card, stepMinutes: steps.first ?? 1, now: now, completed: completed, isRelearn: isRelearn)
 
         case .hard:
-            // Repeat the current step.
+            // Anki's behaviour: Hard schedules the card between the current
+            // step and the next one, so it's clearly slower than Good but
+            // not as drastic as Again. Stays on the same step.
             let index = min(completed, stepCount - 1)
-            scheduleLearningStep(&card, stepMinutes: steps[index], now: now, completed: completed, isRelearn: isRelearn)
+            let current = steps[index]
+            let next = index + 1 < stepCount ? steps[index + 1] : current * 2
+            let hardMinutes = max(1, (current + next + 1) / 2)
+            scheduleLearningStep(&card, stepMinutes: hardMinutes, now: now, completed: completed, isRelearn: isRelearn)
 
         case .good:
             if completed >= stepCount {
@@ -247,19 +252,25 @@ struct SM2Scheduler {
         case .new, .learning, .relearning:
             let steps = card.cardType == .relearning ? config.relearningStepsMinutes : config.learningStepsMinutes
             let stepCount = max(steps.count, 1)
+            // Sanitize against foreign `left` encodings the same way
+            // `applyLearning` does.
+            let leftIndex = (card.left >= 0 && card.left <= stepCount) ? card.left : 0
             switch ease {
             case .again:
                 return Double((steps.first ?? 1) * 60)
             case .hard:
-                let index = min(card.left, stepCount - 1)
-                return Double(steps[index] * 60)
+                let index = min(leftIndex, stepCount - 1)
+                let current = steps[index]
+                let next = index + 1 < stepCount ? steps[index + 1] : current * 2
+                let hardMinutes = max(1, (current + next + 1) / 2)
+                return Double(hardMinutes * 60)
             case .good:
                 // Mirrors `applyLearning`: graduate once all steps are shown,
                 // otherwise schedule the current step's delay.
-                if card.left >= stepCount {
+                if leftIndex >= stepCount {
                     return Double(config.graduatingIntervalDays) * 86400
                 }
-                return Double(steps[card.left] * 60)
+                return Double(steps[leftIndex] * 60)
             case .easy:
                 return Double(config.easyIntervalDays) * 86400
             }
