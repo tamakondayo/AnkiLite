@@ -78,12 +78,14 @@ final class DeckStatsViewModel: ObservableObject {
                 """, arguments: args) ?? 0
             retention30 = total > 0 ? Double(passes) / Double(total) : 0
 
-            // Daily reviews for the last 30 days
+            // Daily reviews for the last 30 days, bucketed on local calendar
+            // days so a bar always means "that date" (the previous half-day
+            // offset straddled two dates).
             var bars: [DailyReview] = []
-            let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+            let startOfToday = Calendar.current.startOfDay(for: Date())
             let dayMs: Int64 = 86_400_000
             for offset in stride(from: -29, through: 0, by: 1) {
-                let start = nowMs + Int64(offset) * dayMs - dayMs / 2
+                let start = Int64(startOfToday.timeIntervalSince1970 * 1000) + Int64(offset) * dayMs
                 let end = start + dayMs
                 let pass = try Int.fetchOne(db, sql: """
                     SELECT COUNT(*) FROM reviewLog
@@ -101,9 +103,13 @@ final class DeckStatsViewModel: ObservableObject {
 
             // Interval distribution buckets (review cards)
             let bucketDefs: [(label: String, lower: Int, upper: Int)] = [
-                ("1日", 1, 1), ("2-7日", 2, 7), ("8-30日", 8, 30),
-                ("1-3月", 31, 90), ("3-6月", 91, 180), ("6月-1年", 181, 365),
-                ("1年+", 366, Int.max)
+                (String(localized: "1日"), 1, 1),
+                (String(localized: "2-7日"), 2, 7),
+                (String(localized: "8-30日"), 8, 30),
+                (String(localized: "1-3月"), 31, 90),
+                (String(localized: "3-6月"), 91, 180),
+                (String(localized: "6月-1年"), 181, 365),
+                (String(localized: "1年+"), 366, Int.max)
             ]
             var buckets: [IntervalBucket] = []
             for def in bucketDefs {
@@ -123,10 +129,10 @@ final class DeckStatsViewModel: ObservableObject {
             }
             intervalBuckets = buckets
 
-            // Due forecast for the next 30 days
+            // Due forecast for the next 30 days (rollover-aware "today",
+            // matching the scheduler so the bar at 0 equals what's due now).
             let crt = try Int64.fetchOne(db, sql: "SELECT crt FROM collectionMeta WHERE id = 1") ?? 0
-            let todaySec = Int64(Date().timeIntervalSince1970)
-            let todayDays = Int((todaySec - crt) / 86_400)
+            let todayDays = SM2Scheduler().today(now: Date(), crt: crt)
             var forecast: [DailyReview] = []
             for offset in 0..<30 {
                 let day = todayDays + offset
@@ -176,7 +182,9 @@ struct DeckStatsView: View {
                         value: String(format: "%.0f%%", viewModel.retention30 * 100),
                         accent: Theme.Count.review)
             summaryTile(label: "平均interval",
-                        value: viewModel.averageInterval > 0 ? "\(Int(round(viewModel.averageInterval)))日" : "—",
+                        value: viewModel.averageInterval > 0
+                            ? String(localized: "\(Int(round(viewModel.averageInterval)))日")
+                            : "—",
                         accent: Theme.accent)
             summaryTile(label: "総レビュー",
                         value: "\(viewModel.totalReviews)",
@@ -184,7 +192,7 @@ struct DeckStatsView: View {
         }
     }
 
-    private func summaryTile(label: String, value: String, accent: Color) -> some View {
+    private func summaryTile(label: LocalizedStringKey, value: String, accent: Color) -> some View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.title3.weight(.semibold).monospacedDigit())
@@ -223,7 +231,7 @@ struct DeckStatsView: View {
         .clipShape(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
     }
 
-    private func stateRow(_ title: String, _ value: Int, color: Color) -> some View {
+    private func stateRow(_ title: LocalizedStringKey, _ value: Int, color: Color) -> some View {
         HStack {
             Circle().fill(color).frame(width: 8, height: 8)
             Text(title).font(.subheadline).foregroundStyle(Theme.textSecondary)
@@ -256,7 +264,7 @@ struct DeckStatsView: View {
                 AxisMarks(values: [-29, -20, -10, 0]) { value in
                     AxisValueLabel {
                         if let n = value.as(Int.self) {
-                            Text(n == 0 ? "今日" : "\(n)日")
+                            Text(n == 0 ? String(localized: "今日") : String(localized: "\(n)日"))
                                 .font(.caption2)
                         }
                     }
@@ -289,7 +297,7 @@ struct DeckStatsView: View {
                 AxisMarks(values: [0, 7, 14, 21, 29]) { value in
                     AxisValueLabel {
                         if let n = value.as(Int.self) {
-                            Text(n == 0 ? "今日" : "+\(n)")
+                            Text(n == 0 ? String(localized: "今日") : "+\(n)")
                                 .font(.caption2)
                         }
                     }

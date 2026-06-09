@@ -67,10 +67,10 @@ extension ReviewEase {
 
     var label: String {
         switch self {
-        case .again: return "もう一度"
-        case .hard: return "むずかしい"
-        case .good: return "ふつう"
-        case .easy: return "かんたん"
+        case .again: return String(localized: "もう一度")
+        case .hard: return String(localized: "むずかしい")
+        case .good: return String(localized: "ふつう")
+        case .easy: return String(localized: "かんたん")
         }
     }
 }

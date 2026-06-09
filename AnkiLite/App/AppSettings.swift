@@ -167,6 +167,7 @@ final class AppSettings: ObservableObject {
         case .fsrs:
             var fsrs = FSRSScheduler()
             fsrs.desiredRetention = desiredRetention
+            fsrs.rolloverHour = rolloverHour
             return fsrs
         }
     }

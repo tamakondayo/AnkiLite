@@ -139,12 +139,14 @@ final class SM2SchedulerTests: XCTestCase {
 
     // MARK: - Interval formatting
 
+    /// Compare against the same String Catalog lookups the implementation
+    /// uses, so the test passes regardless of the host app's locale.
     func testIntervalFormatting() {
         let scheduler = makeScheduler()
-        XCTAssertEqual(scheduler.formatInterval(seconds: 30), "< 1分")
-        XCTAssertEqual(scheduler.formatInterval(seconds: 600), "10分")
-        XCTAssertEqual(scheduler.formatInterval(seconds: 86400), "1日")
-        XCTAssertEqual(scheduler.formatInterval(seconds: 86400 * 3), "3日")
+        XCTAssertEqual(scheduler.formatInterval(seconds: 30), String(localized: "< 1分"))
+        XCTAssertEqual(scheduler.formatInterval(seconds: 600), String(localized: "\(10)分"))
+        XCTAssertEqual(scheduler.formatInterval(seconds: 86400), String(localized: "\(1)日"))
+        XCTAssertEqual(scheduler.formatInterval(seconds: 86400 * 3), String(localized: "\(3)日"))
     }
 
     // MARK: - Review log
@@ -156,5 +158,28 @@ final class SM2SchedulerTests: XCTestCase {
         XCTAssertEqual(result.log.lastIvl, 10)
         XCTAssertEqual(result.log.ivl, result.card.ivl)
         XCTAssertEqual(result.log.time, 1500)
+    }
+
+    /// Revlog type must reflect the state that handled the answer
+    /// (0=learn, 1=review, 2=relearn) — i.e. the card's PRE-answer state.
+    func testReviewLogTypeUsesPreAnswerState() {
+        let scheduler = makeScheduler()
+
+        // Learning answers are logged as learn (0), even on the graduating
+        // press — otherwise they would eat the daily review quota.
+        XCTAssertEqual(scheduler.answer(card: newCard(), ease: .good, crt: 0).log.type, 0)
+        XCTAssertEqual(scheduler.answer(card: newCard(), ease: .easy, crt: 0).log.type, 0,
+                       "Graduating press is still a LEARNING review")
+
+        // Review answers stay type 1 — including a lapse (Again).
+        XCTAssertEqual(scheduler.answer(card: reviewCard(ivl: 10), ease: .good, crt: 0).log.type, 1)
+        XCTAssertEqual(scheduler.answer(card: reviewCard(ivl: 10), ease: .again, crt: 0).log.type, 1,
+                       "A lapsing review is logged as a review, not a relearn")
+
+        // Relearning answers → type 2.
+        var relearn = newCard()
+        relearn.cardType = .relearning
+        relearn.cardQueue = .learning
+        XCTAssertEqual(scheduler.answer(card: relearn, ease: .good, crt: 0).log.type, 2)
     }
 }

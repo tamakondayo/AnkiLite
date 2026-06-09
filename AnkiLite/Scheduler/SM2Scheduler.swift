@@ -79,6 +79,18 @@ struct SM2Scheduler {
         let previousIvl = card.ivl
         let nowMs = Int64(now.timeIntervalSince1970 * 1000)
 
+        // Revlog type reflects the state that HANDLED the answer (Anki
+        // semantics: 0=learn, 1=review, 2=relearn), so it must come from the
+        // card's state *before* answering. Deriving it from the post-answer
+        // state logged a graduating press as "review" (wrongly consuming the
+        // daily review quota) and a lapsing review as "relearn".
+        let logType: Int
+        switch input.cardType {
+        case .new, .learning: logType = 0
+        case .review: logType = 1
+        case .relearning: logType = 2
+        }
+
         switch card.cardType {
         case .new, .learning:
             applyLearning(&card, ease: ease, now: now, crt: crt, steps: config.learningStepsMinutes, isRelearn: false)
@@ -99,7 +111,7 @@ struct SM2Scheduler {
             lastIvl: previousIvl,
             factor: card.factor,
             time: timeTakenMs,
-            type: card.cardType == .review ? 1 : (card.cardType == .relearning ? 2 : 0)
+            type: logType
         )
 
         return ScheduleResult(card: card, log: log)
@@ -304,27 +316,28 @@ struct SM2Scheduler {
     }
 
     /// Formats a duration into a compact human label ("< 1分", "10分", "1日", "3か月"…).
+    /// All units go through the String Catalog so English users see "10m", "3mo" etc.
     func formatInterval(seconds: Double) -> String {
         if seconds < 60 {
-            return "< 1分"
+            return String(localized: "< 1分")
         }
         let minutes = seconds / 60
         if minutes < 60 {
-            return "\(Int(minutes.rounded()))分"
+            return String(localized: "\(Int(minutes.rounded()))分")
         }
         let hours = minutes / 60
         if hours < 24 {
-            return "\(Int(hours.rounded()))時間"
+            return String(localized: "\(Int(hours.rounded()))時間")
         }
         let days = hours / 24
         if days < 30 {
-            return "\(Int(days.rounded()))日"
+            return String(localized: "\(Int(days.rounded()))日")
         }
         let months = days / 30
         if months < 12 {
-            return "\(Int(months.rounded()))か月"
+            return String(localized: "\(Int(months.rounded()))か月")
         }
         let years = days / 365
-        return String(format: "%.1f年", years)
+        return String(format: String(localized: "%.1f年"), years)
     }
 }

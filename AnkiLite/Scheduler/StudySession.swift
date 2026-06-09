@@ -100,18 +100,19 @@ final class StudySession: ObservableObject {
             .filter { $0.id == deck.id || $0.name.hasPrefix(prefix) }
             .map(\.id)
 
-        Self.autoUnbury(database: database)
+        Self.autoUnbury(database: database,
+                        dayNumber: scheduler.today(now: Date(), crt: crt))
         try loadNext()
         refreshCounts()
     }
 
     /// At day rollover, restore buried cards to their natural queue derived
     /// from `type` (new=0 / learning=1 / review=2 / relearning=1).
-    private static func autoUnbury(database: DatabaseManager) {
+    /// `dayNumber` is the scheduler's rollover-aware day so unburying happens
+    /// at the configured rollover hour, not at UTC midnight.
+    private static func autoUnbury(database: DatabaseManager, dayNumber: Int) {
         let lastKey = "lastUnburyDay"
-        let now = Int64(Date().timeIntervalSince1970)
-        // Calendar day in the device's current locale.
-        let today = Int(now / 86_400)
+        let today = dayNumber
         let lastDay = UserDefaults.standard.integer(forKey: lastKey)
         guard today != lastDay else { return }
         try? database.dbQueue.write { db in
@@ -135,24 +136,29 @@ final class StudySession: ObservableObject {
 
     /// Milliseconds-since-epoch for the start of "today" (per the rollover hour),
     /// used to count reviews that fall within the current study day.
+    /// Inverse of `SM2Scheduler.today`: day N starts at crt + N days + rollover.
     private var todayStartMs: Int64 {
-        let dayStart = crt + Int64(todayDays) * 86_400
+        let rolloverOffset = Int64(scheduler.rolloverHour) * 3600
+        let dayStart = crt + Int64(todayDays) * 86_400 + rolloverOffset
         return dayStart * 1000
     }
 
-    /// Number of brand-new cards already introduced today.
-    /// Counts DISTINCT cards (not log entries) — a single new card is one
-    /// "introduction" even if the user pressed Good twice in learning steps.
+    /// Number of brand-new cards introduced today: cards whose FIRST-ever
+    /// review falls within today. (Counting "any type-0 log today" would
+    /// also charge cards introduced yesterday that are still in learning
+    /// steps against today's new-card quota.)
     private func newCardsIntroducedToday() -> Int {
         guard !deckIds.isEmpty else { return 0 }
         let placeholders = databaseQuestionMarks(count: deckIds.count)
         let args = StatementArguments(deckIds)
         return (try? database.dbQueue.read { db in
             try Int.fetchOne(db, sql: """
-                SELECT COUNT(DISTINCT cid) FROM reviewLog
-                WHERE id >= \(self.todayStartMs)
-                  AND type = 0
-                  AND cid IN (SELECT id FROM card WHERE did IN (\(placeholders)))
+                SELECT COUNT(*) FROM (
+                    SELECT cid, MIN(id) AS firstReview FROM reviewLog
+                    WHERE cid IN (SELECT id FROM card WHERE did IN (\(placeholders)))
+                    GROUP BY cid
+                    HAVING firstReview >= \(self.todayStartMs)
+                )
                 """, arguments: args) ?? 0
         }) ?? 0
     }

@@ -41,6 +41,17 @@ struct FSRSScheduler {
     var desiredRetention: Double = 0.9
     var maximumInterval: Double = 36500
     var minimumInterval: Double = 1
+    /// Hour of day at which a new day begins. Must match the SM-2 config so
+    /// day-number arithmetic agrees between the two schedulers.
+    var rolloverHour: Int = 4
+
+    /// SM-2 instance used for the learning-step machinery and shared
+    /// day-number arithmetic (rollover-aware).
+    var sm2Config: SchedulerConfig {
+        var config = SchedulerConfig.default
+        config.rolloverHour = rolloverHour
+        return config
+    }
 
     // MARK: - Curve constants
 
@@ -154,7 +165,7 @@ struct FSRSScheduler {
                               now: Date,
                               crt: Int64,
                               timeTakenMs: Int) -> ScheduleResult {
-        let sm2 = SM2Scheduler()
+        let sm2 = SM2Scheduler(config: sm2Config)
         var result = sm2.answer(card: input,
                                 ease: ease,
                                 now: now,
@@ -173,7 +184,9 @@ struct FSRSScheduler {
 
             let interval = nextInterval(stability: s)
             result.card.ivl = interval
-            let todayDays = Int((nowSec - crt) / 86_400)
+            // Rollover-aware day number (same arithmetic as SM-2), so the
+            // due date can't drift a day from what the deck list shows.
+            let todayDays = sm2.today(now: now, crt: crt)
             result.card.due = Int64(todayDays + interval)
 
             result.log.ivl = result.card.ivl
@@ -228,7 +241,7 @@ struct FSRSScheduler {
             card.ivl = interval
             card.cardType = .review
             card.cardQueue = .review
-            let todayDays = Int((nowSec - crt) / 86_400)
+            let todayDays = SM2Scheduler(config: sm2Config).today(now: now, crt: crt)
             card.due = Int64(todayDays + interval)
         }
 
@@ -241,7 +254,11 @@ struct FSRSScheduler {
             lastIvl: previousIvl,
             factor: Int(s * 1000),
             time: timeTakenMs,
-            type: rating == 1 ? 2 : 1
+            // This path only handles cards that were in the review state
+            // (learning/relearning goes through `learningPath`), so the
+            // revlog kind is always "review" — Anki logs a lapsing Again
+            // as a review too, since the review state handled it.
+            type: 1
         )
         return ScheduleResult(card: card, log: log)
     }
@@ -260,7 +277,7 @@ struct FSRSScheduler {
         // Learning previews defer to SM-2 so the button labels match what
         // pressing the button will actually do during learning steps.
         if card.cardType == .new || card.cardType == .learning || card.cardType == .relearning {
-            return SM2Scheduler().previewIntervals(for: card)[ease] ?? ""
+            return SM2Scheduler(config: sm2Config).previewIntervals(for: card)[ease] ?? ""
         }
 
         let rating = ease.rawValue
@@ -277,7 +294,7 @@ struct FSRSScheduler {
                 s = nextRecallStability(d: card.difficulty, s: card.stability, r: r, rating: rating)
             }
         }
-        if rating == 1 { return "< 10分" }
+        if rating == 1 { return String(localized: "< 10分") }
         let days = nextInterval(stability: s)
         return SM2Scheduler().formatInterval(seconds: Double(days) * 86400)
     }

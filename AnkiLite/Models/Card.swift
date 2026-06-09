@@ -32,14 +32,14 @@ enum CardFlag: Int, Codable, CaseIterable {
 
     var label: String {
         switch self {
-        case .none: return "なし"
-        case .red: return "赤"
-        case .orange: return "橙"
-        case .green: return "緑"
-        case .blue: return "青"
-        case .pink: return "桃"
-        case .turquoise: return "水"
-        case .purple: return "紫"
+        case .none: return String(localized: "なし")
+        case .red: return String(localized: "赤")
+        case .orange: return String(localized: "橙")
+        case .green: return String(localized: "緑")
+        case .blue: return String(localized: "青")
+        case .pink: return String(localized: "桃")
+        case .turquoise: return String(localized: "水")
+        case .purple: return String(localized: "紫")
         }
     }
 

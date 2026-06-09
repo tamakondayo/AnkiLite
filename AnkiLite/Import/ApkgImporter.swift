@@ -302,7 +302,35 @@ final class ApkgImporter {
     // MARK: - Persist
 
     private func persist(_ parsed: ParsedCollection, mode: ImportMode) throws {
-        try database.setCollectionCreationTime(parsed.crt)
+        // The collection creation time (crt) is the epoch that review-card
+        // `due` day-numbers count from. It must stay FIXED once the local
+        // collection has any cards — overwriting it on a second import would
+        // silently rebase every existing card's due date. Instead, adopt the
+        // package's crt only into an empty collection; otherwise translate
+        // the imported day-numbers into our epoch.
+        let existingCrt = (try? database.collectionCreationTime()) ?? 0
+        let hasExistingCards = (try? database.dbQueue.read { db in
+            try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM \(Card.databaseTableName)") ?? 0
+        }) ?? 0 > 0
+
+        var cards = parsed.cards
+        if existingCrt == 0 && !hasExistingCards {
+            try database.setCollectionCreationTime(parsed.crt)
+        } else {
+            // dayTheirs (since parsed.crt) → dayOurs (since existingCrt).
+            let deltaDays = Int((Double(parsed.crt - existingCrt) / 86_400.0).rounded())
+            if deltaDays != 0 {
+                for i in cards.indices {
+                    let queue = cards[i].cardQueue
+                    let isDayBased = queue == .review || queue == .dayLearning
+                        || ((queue == .suspended || queue == .buried) && cards[i].cardType == .review)
+                    if isDayBased {
+                        cards[i].due += Int64(deltaDays)
+                    }
+                }
+            }
+        }
+
         try database.dbQueue.write { db in
             for noteType in parsed.noteTypes {
                 try noteType.save(db)
@@ -321,7 +349,7 @@ final class ApkgImporter {
                     try note.insert(db)
                 }
             }
-            for card in parsed.cards {
+            for card in cards {
                 if mode == .overwrite {
                     try card.save(db)
                 } else if try Card.fetchOne(db, key: card.id) == nil {

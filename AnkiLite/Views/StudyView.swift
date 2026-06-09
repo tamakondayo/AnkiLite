@@ -95,7 +95,6 @@ struct StudyView: View {
 
     @State private var showingAnswer = false
     @State private var dragOffset: CGSize = .zero
-    @State private var flipAngle: Double = 0
     @State private var sessionStartedAt: Date?
 
     private var nightMode: Bool { colorScheme == .dark }
@@ -220,7 +219,7 @@ struct StudyView: View {
         }
     }
 
-    private func countItem(value: Int, label: String, color: Color) -> some View {
+    private func countItem(value: Int, label: LocalizedStringKey, color: Color) -> some View {
         HStack(spacing: 6) {
             Circle().fill(color).frame(width: 7, height: 7)
             Text("\(value)")
@@ -283,7 +282,6 @@ struct StudyView: View {
         .gesture(cardGesture(for: due))
         .onChange(of: due.id) { _, _ in
             showingAnswer = false
-            flipAngle = 0
         }
     }
 
@@ -354,7 +352,6 @@ struct StudyView: View {
         Haptics.answer(enabled: settings.haptics)
         dragOffset = .zero
         showingAnswer = false
-        flipAngle = 0
         try? session.answer(ease)
     }
 }
@@ -426,11 +423,9 @@ private struct CompletionView: View {
                     statBlock(value: "\(stats.reviewed)", label: "レビュー")
                     divider
                     statBlock(value: formatTime(ms: stats.totalTimeMs), label: "学習時間")
-                    if stats.reviewed > 0 {
-                        divider
-                        statBlock(value: "\(Int(round(Double(stats.reviewed - stats.again) / Double(stats.reviewed) * 100)))%",
-                                  label: "正答率")
-                    }
+                    divider
+                    statBlock(value: "\(Int(round(Double(stats.reviewed - stats.again) / Double(stats.reviewed) * 100)))%",
+                              label: "正答率")
                 }
                 .padding(.vertical, 16)
                 .frame(maxWidth: .infinity)
@@ -460,7 +455,7 @@ private struct CompletionView: View {
         Rectangle().fill(Theme.separator).frame(width: 0.5)
     }
 
-    private func statBlock(value: String, label: String) -> some View {
+    private func statBlock(value: String, label: LocalizedStringKey) -> some View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.title3.weight(.semibold).monospacedDigit())
@@ -474,10 +469,10 @@ private struct CompletionView: View {
 
     private func formatTime(ms: Int) -> String {
         let seconds = ms / 1000
-        if seconds < 60 { return "\(seconds)秒" }
+        if seconds < 60 { return String(localized: "\(seconds)秒") }
         let minutes = seconds / 60
         let remSec = seconds % 60
         if minutes < 10 { return "\(minutes):\(String(format: "%02d", remSec))" }
-        return "\(minutes)分"
+        return String(localized: "\(minutes)分")
     }
 }

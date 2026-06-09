@@ -93,7 +93,11 @@ final class DeckListViewModel: ObservableObject {
         }
 
         // Sort by name (== hierarchical), then hide rows whose ancestor is collapsed.
-        let sorted = visible.sorted { $0.name < $1.name }
+        // localizedStandardCompare gives Finder-style ordering (numeric-aware,
+        // case-insensitive), which reads better for "Lesson 2" vs "Lesson 10".
+        let sorted = visible.sorted {
+            $0.name.localizedStandardCompare($1.name) == .orderedAscending
+        }
         let collapsedNames: Set<String> = Set(sorted
             .filter { collapseStore.isCollapsed($0.id) }
             .map(\.name))
@@ -126,6 +130,15 @@ final class DeckListViewModel: ObservableObject {
     }
 }
 
+/// Pushed screens reachable from a deck row's context menu / swipe actions.
+/// (`NavigationLink` does nothing inside `contextMenu`/`swipeActions`, so
+/// those entry points drive navigation through this state instead.)
+enum DeckDestination: Hashable {
+    case browser(Deck)
+    case stats(Deck)
+    case customStudy(Deck)
+}
+
 struct DeckListView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var importBus: IncomingImportBus
@@ -139,6 +152,7 @@ struct DeckListView: View {
     @State private var deckToEdit: Deck?
     @State private var showNewDeck = false
     @State private var showNewCardPicker = false
+    @State private var destination: DeckDestination?
 
     init(settings: AppSettings) {
         _viewModel = StateObject(wrappedValue: DeckListViewModel(settings: settings))
@@ -221,6 +235,13 @@ struct DeckListView: View {
             .sheet(item: $deckToEdit, onDismiss: { viewModel.reload() }) { deck in
                 DeckEditView(deck: deck)
             }
+            .navigationDestination(item: $destination) { dest in
+                switch dest {
+                case .browser(let deck): CardBrowserView(deck: deck)
+                case .stats(let deck): DeckStatsView(deck: deck)
+                case .customStudy(let deck): CustomStudyView(deck: deck)
+                }
+            }
             .sheet(isPresented: $showNewCardPicker, onDismiss: { viewModel.reload() }) {
                 if let first = viewModel.rows.first?.deck {
                     NewNoteView(initialDeck: first)
@@ -280,8 +301,8 @@ struct DeckListView: View {
                         Label("編集", systemImage: "pencil")
                     }
                     .tint(Theme.accent)
-                    NavigationLink {
-                        CardBrowserView(deck: row.deck)
+                    Button {
+                        destination = .browser(row.deck)
                     } label: {
                         Label("ブラウザ", systemImage: "list.bullet.rectangle")
                     }
@@ -291,14 +312,14 @@ struct DeckListView: View {
                     Button {
                         deckToEdit = row.deck
                     } label: { Label("名前・カテゴリを編集", systemImage: "pencil") }
-                    NavigationLink {
-                        CardBrowserView(deck: row.deck)
+                    Button {
+                        destination = .browser(row.deck)
                     } label: { Label("ブラウザ", systemImage: "list.bullet.rectangle") }
-                    NavigationLink {
-                        DeckStatsView(deck: row.deck)
+                    Button {
+                        destination = .stats(row.deck)
                     } label: { Label("統計", systemImage: "chart.bar") }
-                    NavigationLink {
-                        CustomStudyView(deck: row.deck)
+                    Button {
+                        destination = .customStudy(row.deck)
                     } label: { Label("カスタム学習", systemImage: "slider.horizontal.3") }
                     Button {
                         newCardDeck = row.deck

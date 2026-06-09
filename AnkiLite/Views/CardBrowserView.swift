@@ -17,13 +17,19 @@ final class CardBrowserViewModel: ObservableObject {
     }
 
     enum StateFilter: String, CaseIterable, Identifiable {
-        case all = "すべて"
-        case new = "新規"
-        case learning = "学習中"
-        case review = "復習"
-        case buried = "保留中"
-        case suspended = "停止中"
+        case all, new, learning, review, buried, suspended
         var id: String { rawValue }
+
+        var label: String {
+            switch self {
+            case .all: return String(localized: "すべて")
+            case .new: return String(localized: "新規")
+            case .learning: return String(localized: "学習中")
+            case .review: return String(localized: "復習")
+            case .buried: return String(localized: "保留中")
+            case .suspended: return String(localized: "停止中")
+            }
+        }
     }
 
     @Published var rows: [Row] = []
@@ -189,18 +195,12 @@ struct CardBrowserView: View {
                         .listRowBackground(Theme.surface)
                         .listRowSeparatorTint(Theme.separator)
                         .swipeActions(edge: .trailing) {
+                            // swipeActions only honour plain Buttons (a Menu
+                            // here renders but never opens) — the flag picker
+                            // lives in the context menu instead.
                             Button(role: .destructive) {
                                 viewModel.deleteCard(row.card)
                             } label: { Label("削除", systemImage: "trash") }
-                            Menu {
-                                ForEach(CardFlag.allCases, id: \.rawValue) { flag in
-                                    Button {
-                                        viewModel.setFlag(flag, on: row.card)
-                                    } label: {
-                                        Label(flag.label, systemImage: flag == .none ? "flag.slash" : "flag.fill")
-                                    }
-                                }
-                            } label: { Label("フラグ", systemImage: "flag") }
                         }
                         .swipeActions(edge: .leading) {
                             if row.card.cardQueue == .suspended || row.card.cardQueue == .buried {
@@ -214,6 +214,37 @@ struct CardBrowserView: View {
                                 } label: { Label("停止", systemImage: "pause.fill") }
                                 .tint(Theme.textTertiary)
                             }
+                        }
+                        .contextMenu {
+                            Menu {
+                                ForEach(CardFlag.allCases, id: \.rawValue) { flag in
+                                    Button {
+                                        viewModel.setFlag(flag, on: row.card)
+                                    } label: {
+                                        HStack {
+                                            if flag == row.card.colorFlag {
+                                                Image(systemName: "checkmark")
+                                            }
+                                            Image(systemName: flag == .none ? "flag.slash" : "flag.fill")
+                                                .foregroundStyle(Color(hex: flag.hex))
+                                            Text(flag.label)
+                                        }
+                                    }
+                                }
+                            } label: { Label("フラグ", systemImage: "flag") }
+                            if row.card.cardQueue == .suspended || row.card.cardQueue == .buried {
+                                Button {
+                                    viewModel.restore(row.card)
+                                } label: { Label("復活", systemImage: "play.fill") }
+                            } else {
+                                Button {
+                                    viewModel.setQueue(.suspended, on: row.card)
+                                } label: { Label("停止", systemImage: "pause.circle") }
+                            }
+                            Divider()
+                            Button(role: .destructive) {
+                                viewModel.deleteCard(row.card)
+                            } label: { Label("削除", systemImage: "trash") }
                         }
                     }
                 }
@@ -249,10 +280,10 @@ struct CardBrowserView: View {
         HStack(spacing: 8) {
             Menu {
                 ForEach(CardBrowserViewModel.StateFilter.allCases) { state in
-                    Button(state.rawValue) { viewModel.stateFilter = state }
+                    Button(state.label) { viewModel.stateFilter = state }
                 }
             } label: {
-                filterChip(text: viewModel.stateFilter.rawValue, systemImage: "line.3.horizontal.decrease")
+                filterChip(text: viewModel.stateFilter.label, systemImage: "line.3.horizontal.decrease")
             }
             Menu {
                 Button("すべて") { viewModel.flagFilter = nil }
