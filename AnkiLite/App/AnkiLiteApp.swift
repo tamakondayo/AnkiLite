@@ -5,6 +5,7 @@ import UIKit
 struct AnkiLiteApp: App {
     @StateObject private var settings = AppSettings()
     @StateObject private var importBus = IncomingImportBus()
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         Self.applyGlobalAppearance()
@@ -57,8 +58,14 @@ struct AnkiLiteApp: App {
                     // Cold-launch sweep for orphan scratch HTML files
                     // that a crashed previous session may have left behind.
                     MediaManager.shared.sweepScratchFiles()
-                    // Boot AdMob (ATT prompt + first interstitial preload).
-                    AdsManager.shared.start()
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    // The ATT prompt is silently ignored unless the app is
+                    // ACTIVE when it's requested, so AdMob boots here rather
+                    // than in .task (which can run before activation).
+                    if phase == .active {
+                        AdsManager.shared.start()
+                    }
                 }
         }
     }
