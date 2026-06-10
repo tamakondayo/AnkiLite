@@ -77,10 +77,13 @@ struct StudyContainerView: View {
     private func start() {
         guard session == nil else { return }
         do {
-            session = try StudySession(deck: deck,
+            // Refetch so per-deck limit edits apply even if the list row
+            // that pushed us was rendered before the edit.
+            let fresh = (try? DatabaseManager.shared.deck(id: deck.id)) ?? deck
+            session = try StudySession(deck: fresh,
                                        scheduler: settings.makeScheduler(),
-                                       newCardLimit: settings.newCardsPerDay,
-                                       reviewLimit: settings.reviewsPerDay)
+                                       newCardLimit: fresh.newPerDay ?? settings.newCardsPerDay,
+                                       reviewLimit: fresh.reviewsPerDay ?? settings.reviewsPerDay)
         } catch {
             errorMessage = "学習を開始できませんでした: \(error.localizedDescription)"
         }

@@ -67,6 +67,14 @@ struct SettingsView: View {
                     .tint(Theme.accent)
                 }
 
+                Section("カード") {
+                    NavigationLink {
+                        NoteTypeListView()
+                    } label: {
+                        Label("ノートタイプを管理", systemImage: "square.text.square")
+                    }
+                }
+
                 Section {
                     Picker("スケジューラ", selection: $settings.schedulerKind) {
                         ForEach(SchedulerKind.allCases) { kind in

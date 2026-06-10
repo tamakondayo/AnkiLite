@@ -89,6 +89,14 @@ enum Schema {
             }
         }
 
+        // v4: per-deck daily limits (NULL = inherit the global setting).
+        migrator.registerMigration("v4_deck_limits") { db in
+            try db.alter(table: Deck.databaseTableName) { t in
+                t.add(column: "newPerDay", .integer)
+                t.add(column: "reviewsPerDay", .integer)
+            }
+        }
+
         return migrator
     }
 }

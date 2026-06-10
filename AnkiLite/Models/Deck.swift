@@ -11,17 +11,29 @@ struct Deck: Identifiable, Codable, Hashable, FetchableRecord, PersistableRecord
     var name: String
     /// Last modification time (Unix seconds).
     var mod: Int64
+    /// Per-deck daily new-card limit. nil = inherit the global setting.
+    var newPerDay: Int?
+    /// Per-deck daily review limit. nil = inherit the global setting.
+    var reviewsPerDay: Int?
 
     enum Columns {
         static let id = Column("id")
         static let name = Column("name")
         static let mod = Column("mod")
+        static let newPerDay = Column("newPerDay")
+        static let reviewsPerDay = Column("reviewsPerDay")
     }
 
-    init(id: Int64, name: String, mod: Int64 = Int64(Date().timeIntervalSince1970)) {
+    init(id: Int64,
+         name: String,
+         mod: Int64 = Int64(Date().timeIntervalSince1970),
+         newPerDay: Int? = nil,
+         reviewsPerDay: Int? = nil) {
         self.id = id
         self.name = name
         self.mod = mod
+        self.newPerDay = newPerDay
+        self.reviewsPerDay = reviewsPerDay
     }
 
     /// The components of a hierarchical deck name.

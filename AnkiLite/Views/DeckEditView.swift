@@ -13,6 +13,12 @@ struct DeckEditView: View {
     @State private var allDecks: [Deck] = []
     @State private var saveError: String?
 
+    // Per-deck daily limits (nil = inherit the global setting).
+    @State private var overrideNewLimit = false
+    @State private var newPerDay = 20
+    @State private var overrideReviewLimit = false
+    @State private var reviewsPerDay = 200
+
     init(deck: Deck) {
         self.deck = deck
     }
@@ -50,6 +56,40 @@ struct DeckEditView: View {
                                 .multilineTextAlignment(.trailing)
                         }
                     }
+                }
+
+                Section {
+                    Toggle("新規カード上限を個別設定", isOn: $overrideNewLimit)
+                        .tint(Theme.accent)
+                    if overrideNewLimit {
+                        Stepper(value: $newPerDay, in: 0...999, step: 5) {
+                            HStack {
+                                Text("1日の新規カード上限")
+                                Spacer()
+                                Text(newPerDay == 0 ? String(localized: "無制限") : "\(newPerDay)")
+                                    .foregroundStyle(Theme.textSecondary)
+                                    .monospacedDigit()
+                            }
+                        }
+                    }
+                    Toggle("復習上限を個別設定", isOn: $overrideReviewLimit)
+                        .tint(Theme.accent)
+                    if overrideReviewLimit {
+                        Stepper(value: $reviewsPerDay, in: 0...9999, step: 25) {
+                            HStack {
+                                Text("1日の復習上限")
+                                Spacer()
+                                Text(reviewsPerDay == 0 ? String(localized: "無制限") : "\(reviewsPerDay)")
+                                    .foregroundStyle(Theme.textSecondary)
+                                    .monospacedDigit()
+                            }
+                        }
+                    }
+                } header: {
+                    Text("このデッキの上限")
+                } footer: {
+                    Text("オフのときは設定画面の全体共通の値が使われます。サブデッキも親と一緒に学習する場合は親デッキの設定が適用されます。")
+                        .font(.caption)
                 }
             }
             .scrollContentBackground(.hidden)
@@ -94,10 +134,17 @@ struct DeckEditView: View {
         return trimmed
     }
 
+    private var editedNewPerDay: Int? { overrideNewLimit ? newPerDay : nil }
+    private var editedReviewsPerDay: Int? { overrideReviewLimit ? reviewsPerDay : nil }
+
+    private var limitsChanged: Bool {
+        editedNewPerDay != deck.newPerDay || editedReviewsPerDay != deck.reviewsPerDay
+    }
+
     private var hasValidChange: Bool {
         let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return false }
-        return newFullName != deck.name
+        return newFullName != deck.name || limitsChanged
     }
 
     private func load() {
@@ -109,13 +156,28 @@ struct DeckEditView: View {
         } else {
             parent = nil
         }
+        if let limit = deck.newPerDay {
+            overrideNewLimit = true
+            newPerDay = limit
+        }
+        if let limit = deck.reviewsPerDay {
+            overrideReviewLimit = true
+            reviewsPerDay = limit
+        }
     }
 
     private func save() {
         let final = newFullName
         guard !final.isEmpty else { return }
         do {
-            try DatabaseManager.shared.renameDeck(deck, to: final)
+            if final != deck.name {
+                try DatabaseManager.shared.renameDeck(deck, to: final)
+            }
+            if limitsChanged {
+                try DatabaseManager.shared.setDeckLimits(deckId: deck.id,
+                                                         newPerDay: editedNewPerDay,
+                                                         reviewsPerDay: editedReviewsPerDay)
+            }
             Haptics.success(enabled: settings.haptics)
             dismiss()
         } catch {

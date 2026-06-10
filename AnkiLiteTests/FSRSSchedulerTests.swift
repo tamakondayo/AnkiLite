@@ -28,8 +28,10 @@ final class FSRSSchedulerTests: XCTestCase {
         let expected = Int64(now.timeIntervalSince1970) + 10 * 60
         XCTAssertEqual(result.card.due, expected,
                        "First Good should schedule the NEXT learning step (10m)")
-        XCTAssertEqual(result.card.stability, 0,
-                       "FSRS memory state must NOT be seeded until graduation")
+        // fsrs-rs `step`: the first-ever answer seeds the memory state
+        // (init_stability(Good) == w[2]), even while still in learning.
+        XCTAssertEqual(result.card.stability, 2.3065, accuracy: 0.0001,
+                       "First answer must seed the FSRS memory state")
     }
 
     /// Two Goods (advance to step 1, then graduate) hand off to FSRS.
@@ -41,8 +43,9 @@ final class FSRSSchedulerTests: XCTestCase {
 
         XCTAssertEqual(card.cardType, .review,
                        "Card should graduate to review after all learning steps")
-        XCTAssertGreaterThan(card.stability, 0,
-                             "FSRS memory state must be seeded on graduation")
+        // Short-term sinc for Good is clamped to ≥ 1, so stability can only
+        // have grown from the seeded w[2].
+        XCTAssertGreaterThanOrEqual(card.stability, 2.3065 - 0.0001)
         XCTAssertGreaterThanOrEqual(card.ivl, 1)
     }
 
@@ -51,7 +54,21 @@ final class FSRSSchedulerTests: XCTestCase {
         let result = scheduler.answer(card: newCard(), ease: .again, crt: 0)
         XCTAssertEqual(result.card.cardType, .learning)
         XCTAssertEqual(result.card.left, 0)
-        XCTAssertEqual(result.card.stability, 0)
+        // init_stability(Again) == w[0].
+        XCTAssertEqual(result.card.stability, 0.212, accuracy: 0.0001)
+    }
+
+    /// Same-day Again after a seeded state shrinks stability via the
+    /// short-term curve (sinc < 1 allowed for rating 1).
+    func testShortTermAgainShrinksStability() {
+        let scheduler = makeScheduler()
+        var card = newCard()
+        card = scheduler.answer(card: card, ease: .good, crt: 0).card   // seed 2.3065
+        let before = card.stability
+        card = scheduler.answer(card: card, ease: .again, crt: 0).card  // short-term Again
+        XCTAssertLessThan(card.stability, before,
+                          "Again during learning should reduce stability")
+        XCTAssertGreaterThan(card.stability, 0)
     }
 
     // MARK: - Numerical conformance with fsrs-rs (FSRS-6 defaults)

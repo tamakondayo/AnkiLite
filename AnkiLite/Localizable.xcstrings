@@ -51,6 +51,16 @@
         }
       }
     },
+    "%lldノート": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld notes"
+          }
+        }
+      }
+    },
     "%lld件": {
       "extractionState": "manual",
       "localizations": {
@@ -117,7 +127,6 @@
         }
       }
     },
-    "+%lld": {},
     ".apkg ファイルを読み込む": {
       "localizations": {
         "en": {
@@ -139,7 +148,6 @@
       }
     },
     "1-3月": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -150,7 +158,6 @@
       }
     },
     "1年+": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -161,7 +168,6 @@
       }
     },
     "1日": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -192,7 +198,6 @@
       }
     },
     "2-7日": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -203,7 +208,6 @@
       }
     },
     "3-6月": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -214,7 +218,6 @@
       }
     },
     "6月-1年": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -225,7 +228,6 @@
       }
     },
     "8-30日": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -252,7 +254,6 @@
       }
     },
     "< 1分": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -275,7 +276,6 @@
       }
     },
     "FSRS (新方式)": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -290,7 +290,6 @@
       "shouldTranslate": false
     },
     "SM-2 (互換)": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -375,12 +374,21 @@
       }
     },
     "かんたん": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Easy"
+          }
+        }
+      }
+    },
+    "このテンプレートを削除": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this template"
           }
         }
       }
@@ -395,12 +403,32 @@
         }
       }
     },
+    "このデッキの上限": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limits for this deck"
+          }
+        }
+      }
+    },
     "このデッキの今日の分は終わりです": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "You're done with this deck for today."
+          }
+        }
+      }
+    },
+    "このノートタイプは%lld個のノートで使われています。先にノートを削除するか、別のタイプに移してください。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This note type is used by %lld notes. Delete those notes or move them to another type first."
           }
         }
       }
@@ -416,7 +444,6 @@
       }
     },
     "なし": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -437,7 +464,6 @@
       }
     },
     "ふつう": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -448,7 +474,6 @@
       }
     },
     "むずかしい": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -459,7 +484,6 @@
       }
     },
     "もう一度": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -529,6 +553,16 @@
         }
       }
     },
+    "オフのときは設定画面の全体共通の値が使われます。サブデッキも親と一緒に学習する場合は親デッキの設定が適用されます。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When off, the global value from Settings is used. When subdecks are studied with their parent, the parent deck's setting applies."
+          }
+        }
+      }
+    },
     "カスタム学習": {
       "localizations": {
         "en": {
@@ -555,6 +589,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Category (parent deck)"
+          }
+        }
+      }
+    },
+    "カード": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cards"
+          }
+        }
+      }
+    },
+    "カード%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card %lld"
+          }
+        }
+      }
+    },
+    "カード1": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card 1"
+          }
+        }
+      }
+    },
+    "カード2": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card 2"
           }
         }
       }
@@ -632,7 +706,6 @@
       }
     },
     "クラシックな SM-2 方式 (SuperMemo 系)": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -680,6 +753,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Scheduler"
+          }
+        }
+      }
+    },
+    "スタイル (CSS)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Styling (CSS)"
           }
         }
       }
@@ -732,6 +815,66 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dark"
+          }
+        }
+      }
+    },
+    "テキスト": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text"
+          }
+        }
+      }
+    },
+    "テンプレート%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Template %lld"
+          }
+        }
+      }
+    },
+    "テンプレート%lld枚・フィールド%lld個": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld templates · %lld fields"
+          }
+        }
+      }
+    },
+    "テンプレートを追加": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add template"
+          }
+        }
+      }
+    },
+    "テンプレートを追加すると、このタイプの既存ノート全部に新しいカードが作られます。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adding a template creates a new card for every existing note of this type."
+          }
+        }
+      }
+    },
+    "テンプレート名": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Template name"
           }
         }
       }
@@ -828,6 +971,16 @@
         }
       }
     },
+    "ノートを保存しました": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note saved"
+          }
+        }
+      }
+    },
     "ノートを編集": {
       "localizations": {
         "en": {
@@ -844,6 +997,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Note type"
+          }
+        }
+      }
+    },
+    "ノートタイプを管理": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage note types"
+          }
+        }
+      }
+    },
+    "ノートタイプを編集": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit note type"
+          }
+        }
+      }
+    },
+    "ノートタイプ名": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note type name"
           }
         }
       }
@@ -956,6 +1139,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fields"
+          }
+        }
+      }
+    },
+    "フィールドを削除すると、そのフィールドに入っていた内容もすべてのノートから削除されます。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleting a field also removes its content from every note."
+          }
+        }
+      }
+    },
+    "フィールドを追加": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add field"
+          }
+        }
+      }
+    },
+    "フィールド名": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Field name"
           }
         }
       }
@@ -1181,7 +1394,6 @@
       }
     },
     "保持率(30日)": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1229,7 +1441,6 @@
       }
     },
     "停止中": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1269,8 +1480,17 @@
         }
       }
     },
+    "削除できません": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot delete"
+          }
+        }
+      }
+    },
     "合計": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1291,12 +1511,52 @@
         }
       }
     },
+    "名前": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        }
+      }
+    },
     "名前・カテゴリを編集": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Edit name & category"
+          }
+        }
+      }
+    },
+    "基本": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basic"
+          }
+        }
+      }
+    },
+    "基本（逆向きカード付き）": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basic (and reversed card)"
+          }
+        }
+      }
+    },
+    "基本（逆向きカード付き） %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basic (and reversed card) %lld"
           }
         }
       }
@@ -1384,7 +1644,6 @@
       }
     },
     "学習中 (若い)": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1395,7 +1654,6 @@
       }
     },
     "学習時間": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1426,7 +1684,6 @@
       }
     },
     "平均interval": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1443,6 +1700,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Review"
+          }
+        }
+      }
+    },
+    "復習上限を個別設定": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Override review limit"
           }
         }
       }
@@ -1498,7 +1765,6 @@
       }
     },
     "新しい統計的アルゴリズム (推奨)": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1514,6 +1780,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "New"
+          }
+        }
+      }
+    },
+    "新規カード上限を個別設定": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Override new-card limit"
           }
         }
       }
@@ -1610,7 +1886,6 @@
       }
     },
     "桃": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1620,8 +1895,17 @@
         }
       }
     },
+    "検索 (deck: tag: is: flag:)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search (deck: tag: is: flag:)"
+          }
+        }
+      }
+    },
     "橙": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1632,7 +1916,6 @@
       }
     },
     "正答率": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1663,7 +1946,6 @@
       }
     },
     "水": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1714,8 +1996,27 @@
         }
       }
     },
+    "穴埋め": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloze"
+          }
+        }
+      }
+    },
+    "穴埋め・フィールド%lld個": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloze · %lld fields"
+          }
+        }
+      }
+    },
     "紫": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1727,7 +2028,6 @@
     },
     "統計": {},
     "総レビュー": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1738,7 +2038,6 @@
       }
     },
     "緑": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1759,7 +2058,6 @@
       }
     },
     "習得済み": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1775,6 +2073,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Display name"
+          }
+        }
+      }
+    },
+    "表面": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Front"
+          }
+        }
+      }
+    },
+    "表面 (質問)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Front (question)"
+          }
+        }
+      }
+    },
+    "裏面": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        }
+      }
+    },
+    "裏面 (答え)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back (answer)"
+          }
+        }
+      }
+    },
+    "裏面追加": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back Extra"
           }
         }
       }
@@ -1880,7 +2228,6 @@
       }
     },
     "赤": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1921,7 +2268,6 @@
       }
     },
     "青": {
-      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {

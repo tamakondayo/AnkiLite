@@ -336,9 +336,16 @@ final class ApkgImporter {
                 try noteType.save(db)
             }
             for deck in parsed.decks {
-                if mode == .overwrite {
-                    try deck.save(db)
-                } else if try Deck.fetchOne(db, key: deck.id) == nil {
+                if let existing = try Deck.fetchOne(db, key: deck.id) {
+                    if mode == .overwrite {
+                        // Refresh the name but keep locally-configured
+                        // per-deck limits (the package knows nothing of them).
+                        var updated = deck
+                        updated.newPerDay = existing.newPerDay
+                        updated.reviewsPerDay = existing.reviewsPerDay
+                        try updated.update(db)
+                    }
+                } else {
                     try deck.insert(db)
                 }
             }

@@ -37,17 +37,22 @@ final class CardBrowserViewModel: ObservableObject {
     @Published var stateFilter: StateFilter = .all
     @Published var flagFilter: CardFlag? = nil
     @Published var isLoading = false
+    /// Pre-edit snapshot of the most recently saved note edit, undoable
+    /// until the banner times out or the view goes away.
+    @Published var undoableEdit: Note?
 
     let deck: Deck
     private let database: DatabaseManager
     private let deckIds: [Int64]
+    private let scopeDecks: [Deck]
 
     init(deck: Deck, database: DatabaseManager = .shared) {
         self.deck = deck
         self.database = database
         let all = (try? database.allDecks()) ?? []
         let prefix = deck.name + "::"
-        self.deckIds = all.filter { $0.id == deck.id || $0.name.hasPrefix(prefix) }.map(\.id)
+        self.scopeDecks = all.filter { $0.id == deck.id || $0.name.hasPrefix(prefix) }
+        self.deckIds = scopeDecks.map(\.id)
     }
 
     /// Re-runs the query (debouncing should be handled by the caller).
@@ -81,9 +86,17 @@ final class CardBrowserViewModel: ObservableObject {
         }
 
         if !q.isEmpty {
-            sql += " AND (note.flds LIKE ? OR note.sfld LIKE ? OR note.tags LIKE ?)"
-            let like = "%\(q)%"
-            args.append(contentsOf: [like, like, like])
+            // Anki-style search syntax (deck:/tag:/is:/flag:, quotes,
+            // -negation, * wildcards) with escaped LIKE matching.
+            let crt = (try? database.collectionCreationTime()) ?? 0
+            let context = BrowserSearch.Context(
+                scopeDecks: scopeDecks,
+                todayDays: SM2Scheduler().today(now: Date(), crt: crt),
+                nowCutoff: Int64(Date().timeIntervalSince1970)
+            )
+            let compiled = BrowserSearch.compile(query: q, context: context)
+            sql += compiled.sqlFragment
+            args.append(contentsOf: compiled.arguments)
         }
 
         sql += " ORDER BY note.sfld ASC LIMIT 500"
@@ -153,6 +166,16 @@ final class CardBrowserViewModel: ObservableObject {
         updated.cardQueue = queue
         updated.mod = Int64(Date().timeIntervalSince1970)
         try? database.saveCard(updated)
+        reload()
+    }
+
+    /// Reverts the last saved note edit to its pre-edit snapshot.
+    func undoLastEdit() {
+        guard let original = undoableEdit else { return }
+        try? database.dbQueue.write { db in
+            try original.update(db)
+        }
+        undoableEdit = nil
         reload()
     }
 
@@ -255,15 +278,54 @@ struct CardBrowserView: View {
         .background(Theme.background.ignoresSafeArea())
         .navigationTitle("ブラウザ")
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $viewModel.query, prompt: "カードを検索")
+        .searchable(text: $viewModel.query, prompt: "検索 (deck: tag: is: flag:)")
         .onChange(of: viewModel.query) { _, _ in scheduleReload() }
         .onChange(of: viewModel.stateFilter) { _, _ in viewModel.reload() }
         .onChange(of: viewModel.flagFilter) { _, _ in viewModel.reload() }
         .onAppear { viewModel.reload() }
         .sheet(item: $selectedRow) { row in
             NoteEditView(initialNote: row.note, noteType: row.noteType) {
+                // Keep the pre-edit snapshot so the save can be undone.
+                viewModel.undoableEdit = row.note
                 viewModel.reload()
             }
+        }
+        .overlay(alignment: .bottom) {
+            if viewModel.undoableEdit != nil {
+                undoBanner
+            }
+        }
+    }
+
+    private var undoBanner: some View {
+        HStack(spacing: 12) {
+            Text("ノートを保存しました")
+                .font(.subheadline)
+                .foregroundStyle(Theme.textPrimary)
+            Spacer()
+            Button {
+                viewModel.undoLastEdit()
+            } label: {
+                Text("元に戻す")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.accent)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Theme.surfaceRaised)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
+                .stroke(Theme.separator, lineWidth: 0.5)
+        )
+        .padding(.horizontal, 16)
+        .padding(.bottom, 10)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .task {
+            // Auto-dismiss the banner after a few seconds.
+            try? await Task.sleep(nanoseconds: 6_000_000_000)
+            viewModel.undoableEdit = nil
         }
     }
 

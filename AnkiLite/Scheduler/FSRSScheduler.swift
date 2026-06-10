@@ -136,6 +136,19 @@ struct FSRSScheduler {
         return max(0.1, min(raw, upper))
     }
 
+    /// Same-day review (fsrs-rs `stability_short_term`):
+    ///
+    ///     sinc = (w[17] * (rating - 3 + w[18])).exp() * last_s.powf(-w[19])
+    ///     last_s * (rating >= 2 ? sinc.max(1.0) : sinc)
+    ///
+    /// Used for answers within learning steps, where elapsed time is minutes
+    /// (delta_t == 0 in upstream's day units).
+    private func shortTermStability(s: Double, rating: Int) -> Double {
+        let sinc = exp(w[17] * (Double(rating) - 3.0 + w[18])) * pow(s, -w[19])
+        let factor = rating >= 2 ? max(sinc, 1.0) : sinc
+        return clamp(s * factor, 0.001, 36500)
+    }
+
     /// Maps stability → days such that retrievability at that point equals
     /// `desired_retention`:
     ///
@@ -158,8 +171,12 @@ struct FSRSScheduler {
         return reviewPath(card: input, ease: ease, now: now, crt: crt, timeTakenMs: timeTakenMs)
     }
 
-    /// Learning / relearning runs through SM-2's step machinery; FSRS
-    /// memory state is seeded at graduation.
+    /// Learning / relearning runs through SM-2's step machinery for the
+    /// step timing, while FSRS memory state evolves on every answer the way
+    /// fsrs-rs's `step` does: the first-ever answer seeds
+    /// init_stability/init_difficulty, and subsequent same-day answers move
+    /// through the short-term stability curve. The graduation interval then
+    /// reflects how the card actually went through its steps.
     private func learningPath(card input: Card,
                               ease: ReviewEase,
                               now: Date,
@@ -175,14 +192,19 @@ struct FSRSScheduler {
         let nowSec = Int64(now.timeIntervalSince1970)
         let rating = ease.rawValue
 
-        if result.card.cardType == .review {
-            let s = initialStability(rating: rating)
-            let d = initialDifficulty(rating: rating)
-            result.card.stability = s
-            result.card.difficulty = d
-            result.card.lastReview = nowSec
+        if input.stability == 0 {
+            result.card.stability = initialStability(rating: rating)
+            result.card.difficulty = initialDifficulty(rating: rating)
+        } else {
+            // Learning steps are minutes apart → delta_t == 0 in upstream's
+            // day units, which selects the short-term branch.
+            result.card.stability = shortTermStability(s: input.stability, rating: rating)
+            result.card.difficulty = nextDifficulty(d: input.difficulty, rating: rating)
+        }
+        result.card.lastReview = nowSec
 
-            let interval = nextInterval(stability: s)
+        if result.card.cardType == .review {
+            let interval = nextInterval(stability: result.card.stability)
             result.card.ivl = interval
             // Rollover-aware day number (same arithmetic as SM-2), so the
             // due date can't drift a day from what the deck list shows.
@@ -190,8 +212,8 @@ struct FSRSScheduler {
             result.card.due = Int64(todayDays + interval)
 
             result.log.ivl = result.card.ivl
-            result.log.factor = Int(s * 1000)
         }
+        result.log.factor = Int(result.card.stability * 1000)
         return result
     }
 
@@ -235,7 +257,8 @@ struct FSRSScheduler {
             card.cardType = .relearning
             card.cardQueue = .learning
             card.left = 0
-            card.due = nowSec + 600
+            let stepMinutes = sm2Config.relearningStepsMinutes.first ?? 10
+            card.due = nowSec + Int64(stepMinutes) * 60
         } else {
             let interval = nextInterval(stability: s)
             card.ivl = interval

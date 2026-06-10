@@ -126,7 +126,23 @@ final class DatabaseManager {
         }
     }
 
+    /// Updates the per-deck daily limits (nil clears an override).
+    func setDeckLimits(deckId: Int64, newPerDay: Int?, reviewsPerDay: Int?) throws {
+        try dbQueue.write { db in
+            try db.execute(sql: """
+                UPDATE \(Deck.databaseTableName)
+                SET newPerDay = ?, reviewsPerDay = ?, mod = ?
+                WHERE id = ?
+                """, arguments: [newPerDay, reviewsPerDay,
+                                 Int64(Date().timeIntervalSince1970), deckId])
+        }
+    }
+
     // MARK: - Lookups
+
+    func deck(id: Int64) throws -> Deck? {
+        try dbQueue.read { db in try Deck.fetchOne(db, key: id) }
+    }
 
     func noteType(id: Int64) throws -> NoteType? {
         try dbQueue.read { db in try NoteType.fetchOne(db, key: id) }
