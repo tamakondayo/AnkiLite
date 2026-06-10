@@ -5,13 +5,19 @@ import UIKit
 
 /// All AdMob identifiers in one place.
 ///
-/// ⚠️ 現在は Google 公式の**テスト用ID**です。リリース前に必ず差し替えること:
-///   1. `interstitialUnitID` を AdMob 管理画面のインタースティシャル広告ユニットIDに
-///   2. `AnkiLite/Info.plist` の `GADApplicationIdentifier` を自分のアプリIDに
-/// テストIDのまま申請すると収益が入らず、実IDをデバッグで叩くとポリシー違反になります。
+/// Debug builds (⌘R from Xcode) always use Google's official TEST unit id —
+/// tapping or repeatedly showing your own production ads counts as invalid
+/// traffic and can get the AdMob account suspended. Release builds
+/// (TestFlight / App Store) serve the production unit.
+/// The application id lives in `AnkiLite/Info.plist` (GADApplicationIdentifier).
 enum AdConfig {
+    #if DEBUG
     /// Google's official interstitial TEST unit id.
     static let interstitialUnitID = "ca-app-pub-3940256099942544/4411468910"
+    #else
+    /// Production interstitial unit.
+    static let interstitialUnitID = "ca-app-pub-3357693184634020/3250049675"
+    #endif
     /// Minimum seconds between two interstitials, so finishing several
     /// small decks back-to-back doesn't chain-fire ads.
     static let minimumInterval: TimeInterval = 180
