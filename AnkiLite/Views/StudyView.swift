@@ -106,7 +106,9 @@ struct StudyView: View {
         VStack(spacing: 0) {
             countBar
             if session.isFinished {
-                CompletionView(stats: session.stats, settings: settings) { dismiss() }
+                CompletionView(stats: session.stats,
+                               settings: settings,
+                               nextLearningDue: session.nextLearningDue) { dismiss() }
             } else if let due = session.current {
                 ZStack(alignment: .bottom) {
                     cardArea(for: due)
@@ -402,6 +404,7 @@ struct ScaleButtonStyle: ButtonStyle {
 private struct CompletionView: View {
     let stats: StudySession.SessionStats
     let settings: AppSettings
+    var nextLearningDue: Date?
     let onDone: () -> Void
 
     var body: some View {
@@ -419,6 +422,12 @@ private struct CompletionView: View {
                 Text("このデッキの今日の分は終わりです")
                     .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
+                if let nextLearningDue {
+                    let minutes = max(1, Int((nextLearningDue.timeIntervalSinceNow / 60).rounded()))
+                    Text("次の学習カードは約\(minutes)分後です")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.textTertiary)
+                }
             }
 
             if stats.reviewed > 0 {

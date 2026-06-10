@@ -60,6 +60,9 @@ final class StudySession: ObservableObject {
     @Published private(set) var stats = SessionStats()
     @Published private(set) var isFinished = false
     @Published private(set) var canUndo = false
+    /// When the session finished but learning cards are still pending
+    /// (beyond the learn-ahead window), the earliest of their due times.
+    @Published private(set) var nextLearningDue: Date?
 
     let deck: Deck
     private let database: DatabaseManager
@@ -133,6 +136,9 @@ final class StudySession: ObservableObject {
 
     var todayDays: Int { scheduler.today(now: Date(), crt: crt) }
     private var nowCutoff: Int64 { Int64(Date().timeIntervalSince1970) }
+    /// How far ahead of schedule learning cards may be shown when nothing
+    /// else is due (Anki's `learn_ahead_secs` default).
+    private let learnAheadSeconds: Int64 = 1200
 
     /// Milliseconds-since-epoch for the start of "today" (per the rollover hour),
     /// used to count reviews that fall within the current study day.
@@ -194,6 +200,7 @@ final class StudySession: ObservableObject {
         guard let card else {
             current = nil
             isFinished = true
+            nextLearningDue = try? earliestPendingLearningDue()
             return
         }
         guard let note = try database.note(id: card.nid),
@@ -290,6 +297,23 @@ final class StudySession: ObservableObject {
                 """, arguments: args) {
                 return newCard
             }
+            // 4. Learn-ahead (Anki's learn_ahead_secs, 20 min): when nothing
+            //    else is available, serve learning cards up to 20 minutes
+            //    early instead of ending the session while cards from this
+            //    sitting are still mid-steps (e.g. 20 new cards all answered
+            //    Good wait on their 10-minute step). The current card is
+            //    deliberately NOT excluded — re-serving the only remaining
+            //    learning card matches Anki.
+            if allowLearning, let ahead = try Card.fetchOne(db, sql: """
+                SELECT * FROM card
+                WHERE did IN (\(placeholders))
+                  AND queue IN (\(CardQueue.learning.rawValue), \(CardQueue.dayLearning.rawValue))
+                  AND due <= \(self.nowCutoff + self.learnAheadSeconds)
+                  \(allowedClause)
+                ORDER BY due ASC LIMIT 1
+                """, arguments: args) {
+                return ahead
+            }
             return nil
         }
     }
@@ -325,6 +349,23 @@ final class StudySession: ObservableObject {
                                          arguments: StatementArguments(values))
             return Set(ids)
         }
+    }
+
+    /// The due time of the soonest pending learning card in this deck
+    /// scope, or nil when none remain today.
+    private func earliestPendingLearningDue() throws -> Date? {
+        guard !deckIds.isEmpty else { return nil }
+        let placeholders = databaseQuestionMarks(count: deckIds.count)
+        let args = StatementArguments(deckIds)
+        let due: Int64? = try database.dbQueue.read { db in
+            try Int64.fetchOne(db, sql: """
+                SELECT MIN(due) FROM card
+                WHERE did IN (\(placeholders))
+                  AND queue IN (\(CardQueue.learning.rawValue), \(CardQueue.dayLearning.rawValue))
+                """, arguments: args)
+        }
+        guard let due, due > nowCutoff else { return nil }
+        return Date(timeIntervalSince1970: TimeInterval(due))
     }
 
     private func markBrokenAndAdvance(_ card: Card) throws {

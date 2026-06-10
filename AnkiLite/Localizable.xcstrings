@@ -404,6 +404,7 @@
       }
     },
     "このデッキのカードと学習履歴がすべて削除されます。元に戻せません。": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1923,6 +1924,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Orange"
+          }
+        }
+      }
+    },
+    "次の学習カードは約%lld分後です": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next learning card in about %lld min"
           }
         }
       }

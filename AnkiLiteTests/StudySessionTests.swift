@@ -80,6 +80,35 @@ final class StudySessionTests: XCTestCase {
                       "Second new card must be blocked by newCardLimit = 1")
     }
 
+    /// Regression: 20 new cards all answered Good sit on their 10-minute
+    /// learning step — the session must NOT end there. Like Anki's
+    /// learn-ahead (20 min), pending learning cards are served early when
+    /// nothing else is due.
+    func testLearnAheadServesPendingLearningCardsInsteadOfFinishing() throws {
+        let (db, deck) = try makeCollection(reviewCount: 0, newCount: 2)
+        let session = try StudySession(deck: deck,
+                                       database: db,
+                                       scheduler: SM2Scheduler(),
+                                       newCardLimit: 2,
+                                       reviewLimit: 0)
+
+        try session.answer(.good)   // card 1 → 10-minute step
+        try session.answer(.good)   // card 2 → 10-minute step
+
+        // Both cards wait on a 10-minute step and the new quota is spent —
+        // learn-ahead must keep the session going.
+        XCTAssertFalse(session.isFinished,
+                       "Session must not end while this sitting's learning cards are pending")
+        XCTAssertEqual(session.current?.card.cardType, .learning)
+
+        // Second Good on each card graduates it (steps [1m, 10m]).
+        try session.answer(.good)
+        try session.answer(.good)
+        XCTAssertTrue(session.isFinished)
+        XCTAssertNil(session.nextLearningDue,
+                     "No learning cards remain, so no next-due hint")
+    }
+
     /// New cards answered today DO consume the quota (sanity check).
     func testNewCardIntroductionsConsumeQuota() throws {
         let (db, deck) = try makeCollection(reviewCount: 0, newCount: 3)
