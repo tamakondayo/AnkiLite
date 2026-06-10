@@ -387,15 +387,17 @@ final class StudySession: ObservableObject {
                                       crt: crt,
                                       timeTakenMs: elapsedMs)
 
+        try database.saveCard(result.card)
+        // The log id may be bumped on insert (same-millisecond collision),
+        // so capture the actual id for undo AFTER inserting.
+        let logId = try database.insertReviewLog(result.log)
+
         pushUndo(UndoStep(previousCard: due.card,
                           previousNote: due.note,
                           previousNoteType: due.noteType,
-                          insertedReviewLogId: result.log.id,
+                          insertedReviewLogId: logId,
                           action: .review(ease),
                           elapsedMsAtTime: elapsedMs))
-
-        try database.saveCard(result.card)
-        try database.insertReviewLog(result.log)
 
         stats.reviewed += 1
         stats.totalTimeMs += elapsedMs

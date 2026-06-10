@@ -132,7 +132,15 @@ struct StudyView: View {
             if sessionStartedAt == nil { sessionStartedAt = Date() }
         }
         .onChange(of: session.isFinished) { _, finished in
-            if finished { Haptics.success(enabled: settings.haptics) }
+            if finished {
+                Haptics.success(enabled: settings.haptics)
+                // Let the completion screen render, then show the
+                // deck-completion interstitial (no-op when none is loaded
+                // or the cooldown hasn't passed).
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    AdsManager.shared.showInterstitial()
+                }
+            }
         }
     }
 

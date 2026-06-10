@@ -57,6 +57,8 @@ struct AnkiLiteApp: App {
                     // Cold-launch sweep for orphan scratch HTML files
                     // that a crashed previous session may have left behind.
                     MediaManager.shared.sweepScratchFiles()
+                    // Boot AdMob (ATT prompt + first interstitial preload).
+                    AdsManager.shared.start()
                 }
         }
     }

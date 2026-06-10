@@ -203,8 +203,20 @@ final class DatabaseManager {
         try dbQueue.write { db in try card.update(db) }
     }
 
-    func insertReviewLog(_ log: ReviewLog) throws {
-        try dbQueue.write { db in try log.insert(db) }
+    /// Inserts a review log, bumping its millisecond-timestamp id when it
+    /// would collide with an existing row (two answers can land in the same
+    /// millisecond). Returns the id actually written, which callers must use
+    /// for anything that references the log later (e.g. undo).
+    @discardableResult
+    func insertReviewLog(_ log: ReviewLog) throws -> Int64 {
+        try dbQueue.write { db in
+            var entry = log
+            let maxId = try Int64.fetchOne(db,
+                sql: "SELECT MAX(id) FROM \(ReviewLog.databaseTableName)") ?? 0
+            if entry.id <= maxId { entry.id = maxId + 1 }
+            try entry.insert(db)
+            return entry.id
+        }
     }
 }
 

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0A000000000000000000001D /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 0A000000000000000000001B /* GRDB */; };
 		0A000000000000000000001E /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 0A000000000000000000001C /* ZIPFoundation */; };
+		0A0000000000000000000032 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 0A0000000000000000000031 /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +49,7 @@
 			files = (
 				0A000000000000000000001D /* GRDB in Frameworks */,
 				0A000000000000000000001E /* ZIPFoundation in Frameworks */,
+				0A0000000000000000000032 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -101,6 +103,7 @@
 			packageProductDependencies = (
 				0A000000000000000000001B /* GRDB */,
 				0A000000000000000000001C /* ZIPFoundation */,
+				0A0000000000000000000031 /* GoogleMobileAds */,
 			);
 			productName = AnkiLite;
 			productReference = 0A0000000000000000000006 /* AnkiLite.app */;
@@ -162,6 +165,7 @@
 			packageReferences = (
 				0A0000000000000000000019 /* XCRemoteSwiftPackageReference "GRDB" */,
 				0A000000000000000000001A /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+				0A0000000000000000000030 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 			);
 			productRefGroup = 0A0000000000000000000003 /* Products */;
 			projectDirPath = "";
@@ -408,6 +412,14 @@
 				minimumVersion = 0.9.0;
 			};
 		};
+		0A0000000000000000000030 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.2.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -420,6 +432,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0A000000000000000000001A /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
 			productName = ZIPFoundation;
+		};
+		0A0000000000000000000031 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0A0000000000000000000030 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
