@@ -268,7 +268,7 @@ struct DeckListView: View {
                 }
                 Button("キャンセル", role: .cancel) { deckToDelete = nil }
             } message: {
-                Text("このデッキのカードと学習履歴がすべて削除されます。元に戻せません。")
+                Text("このデッキとそのサブデッキのカード・学習履歴がすべて削除されます。元に戻せません。")
             }
         }
         .onAppear { viewModel.reload() }

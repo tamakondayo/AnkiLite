@@ -144,21 +144,29 @@ final class StudySession: ObservableObject {
     }
 
     /// Number of brand-new cards introduced today: cards whose FIRST-ever
-    /// review falls within today. (Counting "any type-0 log today" would
-    /// also charge cards introduced yesterday that are still in learning
-    /// steps against today's new-card quota.)
+    /// review falls within today AND was a learning-state answer (type 0).
+    ///
+    /// Both conditions matter:
+    /// - "first-ever today" alone would charge review cards from decks
+    ///   imported without history against the new-card quota (their first
+    ///   local log is whenever you first answer them), ending sessions
+    ///   after `newCardLimit` answers of ANY kind
+    /// - "any type-0 log today" alone would charge cards introduced
+    ///   yesterday but still in learning steps against today's quota
     private func newCardsIntroducedToday() -> Int {
         guard !deckIds.isEmpty else { return 0 }
         let placeholders = databaseQuestionMarks(count: deckIds.count)
         let args = StatementArguments(deckIds)
         return (try? database.dbQueue.read { db in
             try Int.fetchOne(db, sql: """
-                SELECT COUNT(*) FROM (
-                    SELECT cid, MIN(id) AS firstReview FROM reviewLog
-                    WHERE cid IN (SELECT id FROM card WHERE did IN (\(placeholders)))
-                    GROUP BY cid
-                    HAVING firstReview >= \(self.todayStartMs)
-                )
+                SELECT COUNT(*) FROM reviewLog AS first
+                WHERE first.id >= \(self.todayStartMs)
+                  AND first.type = 0
+                  AND first.cid IN (SELECT id FROM card WHERE did IN (\(placeholders)))
+                  AND NOT EXISTS (
+                      SELECT 1 FROM reviewLog AS earlier
+                      WHERE earlier.cid = first.cid AND earlier.id < first.id
+                  )
                 """, arguments: args) ?? 0
         }) ?? 0
     }

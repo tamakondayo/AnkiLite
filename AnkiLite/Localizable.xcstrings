@@ -393,6 +393,16 @@
         }
       }
     },
+    "このデッキとそのサブデッキのカード・学習履歴がすべて削除されます。元に戻せません。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This will delete the deck, its subdecks, and all of their cards and review history. This cannot be undone."
+          }
+        }
+      }
+    },
     "このデッキのカードと学習履歴がすべて削除されます。元に戻せません。": {
       "localizations": {
         "en": {
@@ -676,6 +686,7 @@
       }
     },
     "カードを検索": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1552,6 +1563,7 @@
       }
     },
     "基本（逆向きカード付き） %lld": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {

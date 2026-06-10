@@ -62,25 +62,45 @@ final class DatabaseManager {
         }
     }
 
+    /// Deletes a deck AND all of its sub-decks (Anki behaviour) — leaving
+    /// the children behind would orphan "親::子" rows with no parent.
+    /// Cards, their review logs, and notes left without cards go too.
     func deleteDeck(_ deck: Deck) throws {
         try dbQueue.write { db in
-            // Delete cards in the deck, then orphaned notes & reviewlogs.
+            let prefixPattern = Self.escapeLike(deck.name + "::") + "%"
+            let deckIds = try Int64.fetchAll(db, sql: """
+                SELECT id FROM \(Deck.databaseTableName)
+                WHERE id = ? OR name LIKE ? ESCAPE '\\'
+                """, arguments: [deck.id, prefixPattern])
+
+            let deckPlaceholders = databaseQuestionMarks(count: deckIds.count)
+            let deckArgs = StatementArguments(deckIds)
+
             let cardIds = try Int64.fetchAll(db,
-                sql: "SELECT id FROM \(Card.databaseTableName) WHERE did = ?",
-                arguments: [deck.id])
+                sql: "SELECT id FROM \(Card.databaseTableName) WHERE did IN (\(deckPlaceholders))",
+                arguments: deckArgs)
             if !cardIds.isEmpty {
                 let placeholders = databaseQuestionMarks(count: cardIds.count)
                 try db.execute(sql: "DELETE FROM \(ReviewLog.databaseTableName) WHERE cid IN (\(placeholders))",
                                arguments: StatementArguments(cardIds))
             }
-            try db.execute(sql: "DELETE FROM \(Card.databaseTableName) WHERE did = ?", arguments: [deck.id])
+            try db.execute(sql: "DELETE FROM \(Card.databaseTableName) WHERE did IN (\(deckPlaceholders))",
+                           arguments: deckArgs)
             // Remove notes that no longer have any cards.
             try db.execute(sql: """
                 DELETE FROM \(Note.databaseTableName)
                 WHERE id NOT IN (SELECT DISTINCT nid FROM \(Card.databaseTableName))
                 """)
-            try deck.delete(db)
+            try db.execute(sql: "DELETE FROM \(Deck.databaseTableName) WHERE id IN (\(deckPlaceholders))",
+                           arguments: deckArgs)
         }
+    }
+
+    /// Escapes LIKE metacharacters so deck names containing % or _ match literally.
+    static func escapeLike(_ s: String) -> String {
+        s.replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "%", with: "\\%")
+            .replacingOccurrences(of: "_", with: "\\_")
     }
 
     /// Renames a deck (and updates all descendant deck names so they remain
