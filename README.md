@@ -1,16 +1,20 @@
 # AnkiLite
 
+[![CI](https://github.com/tamakondayo/AnkiLite/actions/workflows/ci.yml/badge.svg)](https://github.com/tamakondayo/AnkiLite/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 *[日本語版 README はこちら / Japanese version](README.ja.md)*
 
 A free, native iOS flashcard app in SwiftUI that imports your existing Anki `.apkg` decks.
 
-## Screenshots
-
-<!-- Replace these placeholders with real screenshots, e.g. docs/screenshots/deck-list.png -->
+<!-- Screenshots go here. Add the three PNGs described in docs/screenshots/README.md,
+     then delete this comment and uncomment the table below.
 
 | Deck list | Study | Browser |
 | --- | --- | --- |
-| ![Deck list](https://placehold.co/300x620?text=Deck+List) | ![Study](https://placehold.co/300x620?text=Study) | ![Browser](https://placehold.co/300x620?text=Browser) |
+| ![Deck list](docs/screenshots/deck-list.png) | ![Study](docs/screenshots/study.png) | ![Browser](docs/screenshots/browser.png) |
+
+-->
 
 ## Why
 
@@ -34,7 +38,17 @@ It is not a full Anki reimplementation, and there is no AnkiWeb sync. If you rel
 - **Backups** and **local-first storage** — everything lives on device; there is no account and no server.
 - **Dark mode**, haptics, and localized strings.
 
-The app is ad-supported: a single AdMob interstitial may appear after a completed study session, rate-limited to at most one every few minutes. Debug builds always use Google's test ad unit.
+## Ads
+
+**AnkiLite is ad-supported.** A single AdMob interstitial may appear after a completed study session, rate-limited to at most one every few minutes. There are no banners, and no ads during review itself.
+
+This is stated up front rather than buried because it is a real trade-off: the app is free, and the ads are what make it free. If you would rather not see ads at all, [AnkiMobile](https://apps.apple.com/app/ankimobile-flashcards/id373493387) is a one-off purchase with none.
+
+Details for anyone building or forking:
+
+- Debug builds always use Google's official test ad unit — showing or tapping production ads from a development build counts as invalid traffic.
+- The Google Mobile Ads SDK requests App Tracking Transparency at launch. Declining it does not disable the app; you get non-personalized ads.
+- Ad identifiers live in `AnkiLite/Utilities/AdsManager.swift` (`AdConfig`) and `AnkiLite/Info.plist` (`GADApplicationIdentifier`). If you fork and ship this, **replace them with your own** — leaving them pointing at someone else's AdMob account is not going to end well for either of you.
 
 ## Requirements
 
