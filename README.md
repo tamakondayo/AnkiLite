@@ -1,67 +1,95 @@
 # AnkiLite
 
-既存の Anki `.apkg` ファイルを読み込んで学習できる、iOS 向けフラッシュカードアプリ（SwiftUI）。
-AnkiMobile の低価格代替として、**apkg インポート互換性**を最重視しています。
+*[日本語版 README はこちら / Japanese version](README.ja.md)*
 
-> 注: アプリ名 `AnkiLite` は仮称です。設定や `Info.plist` の表示名から変更できます。
+A free, native iOS flashcard app in SwiftUI that imports your existing Anki `.apkg` decks.
 
-## 必要環境
+## Screenshots
 
-- Xcode 16 以降（プロジェクトは Xcode 16 の同期グループ形式 `objectVersion = 77` を使用）
-- iOS 17.0 以降
-- Swift 5.9 以降
+<!-- Replace these placeholders with real screenshots, e.g. docs/screenshots/deck-list.png -->
 
-## 依存ライブラリ（Swift Package Manager）
+| Deck list | Study | Browser |
+| --- | --- | --- |
+| ![Deck list](https://placehold.co/300x620?text=Deck+List) | ![Study](https://placehold.co/300x620?text=Study) | ![Browser](https://placehold.co/300x620?text=Browser) |
 
-`AnkiLite.xcodeproj` を開くと自動的に解決されます。
+## Why
 
-- [GRDB.swift](https://github.com/groue/GRDB.swift) — SQLite 操作
-- [ZIPFoundation](https://github.com/weichsel/ZIPFoundation) — ZIP 解凍
+The official [AnkiMobile](https://apps.apple.com/app/ankimobile-flashcards/id373493387) app for iOS costs **$24.99**. It is a one-off purchase that funds Anki's development, and it is worth supporting — but a paid app is a hard first step if you just want to try spaced repetition on your phone, or if you only need to review decks somebody else made for you.
 
-## ビルド方法
+AnkiLite is a free alternative for that case. The priority is **`.apkg` import compatibility**: decks you already have — including note types, card templates, cloze deletions, and media — should open and study correctly without a conversion step. It is a native SwiftUI app, not a web wrapper.
 
-1. `AnkiLite.xcodeproj` を Xcode で開く
-2. Xcode が SPM パッケージ（GRDB / ZIPFoundation）を自動取得するのを待つ
-3. 実機またはシミュレータを選んで Run（⌘R）
-4. テストは ⌘U（`AnkiLiteTests` ターゲット）
+It is not a full Anki reimplementation, and there is no AnkiWeb sync. If you rely on sync, add-ons, or the complete feature set, buy AnkiMobile.
 
-> もし `.xcodeproj` がうまく開けない場合は、新規 iOS App プロジェクトを作成し、
-> `AnkiLite/` 以下のフォルダをドラッグして追加、SPM で上記 2 つのパッケージを追加すれば同じ構成になります。
+## Features
 
-## プロジェクト構造
+- **`.apkg` import** — unzips the package, reads the embedded SQLite collection (both `collection.anki21` and `collection.anki2`), and stores decks, notes, note types, and cards in the app's own database. Media files are extracted to a sandbox directory. Progress is reported during import, and re-importing an existing deck offers overwrite or merge.
+- **`.apkg` export** — write decks back out to a package you can open in desktop Anki.
+- **Anki card template rendering** — a `WKWebView`-based renderer supporting `{{Field}}`, `{{FrontSide}}`, `{{cloze:Field}}`, conditional sections (`{{#Field}}` / `{{^Field}}`), `[sound:...]` mapped to `<audio>`, images, note-type CSS, and Anki's `night_mode` class for dark mode.
+- **Study** — front → tap to reveal → *Again / Hard / Good / Easy*, with the next interval shown on each button. Swipe gestures, per-state counts (new / learning / review), and a session summary.
+- **Schedulers** — SM-2 with learning steps, ease-factor tracking (2.50 default, 1.30 floor), fuzz, and a configurable day cutoff; plus an FSRS scheduler.
+- **Deck list** — hierarchical decks via `::` separators, per-state counts, swipe to delete, tap to study.
+- **Card browser** — search and filter across your collection.
+- **Deck stats** and **custom study** sessions.
+- **Note and note type editing** — create and edit notes, manage note types and their templates.
+- **Backups** and **local-first storage** — everything lives on device; there is no account and no server.
+- **Dark mode**, haptics, and localized strings.
+
+The app is ad-supported: a single AdMob interstitial may appear after a completed study session, rate-limited to at most one every few minutes. Debug builds always use Google's test ad unit.
+
+## Requirements
+
+- Xcode 16 or later
+- iOS 17.0 or later
+- Swift 5
+
+Dependencies are resolved automatically by Swift Package Manager when the project is opened:
+
+- [GRDB.swift](https://github.com/groue/GRDB.swift) — SQLite access
+- [ZIPFoundation](https://github.com/weichsel/ZIPFoundation) — `.apkg` (ZIP) handling
+- [Google Mobile Ads](https://github.com/googleads/swift-package-manager-google-mobile-ads) — interstitial ads
+
+## Build
+
+1. Clone the repository and open `AnkiLite.xcodeproj` in Xcode.
+2. Wait for Xcode to resolve the Swift Package Manager dependencies.
+3. Select an iOS 17+ simulator or a connected device and run (`⌘R`).
+4. Run the tests with `⌘U` (the `AnkiLiteTests` target).
+
+To run on a physical device you need to set your own signing team in the target's *Signing & Capabilities* tab.
+
+## Project structure
 
 ```
 AnkiLite/
-├── App/                # エントリーポイント・アプリ設定
+├── App/                # Entry point and app settings
 ├── Models/             # Deck / Card / Note / NoteType / ReviewLog
-├── Database/           # GRDB データベース管理・スキーマ
-├── Import/             # apkg インポート・テンプレートレンダラー・メディア管理
-├── Scheduler/          # SM-2 アルゴリズム・学習セッション
-├── Views/              # SwiftUI 画面・WKWebView カード表示・テーマ
-└── Utilities/          # ファイル操作・拡張
-AnkiLiteTests/          # テンプレート / SM-2 / インポートのユニットテスト
+├── Database/           # GRDB database manager and schema
+├── Import/             # apkg import & export, template renderer, media
+├── Scheduler/          # SM-2, FSRS, study session
+├── Views/              # SwiftUI screens, WKWebView card rendering, theme
+└── Utilities/          # File helpers, backups, search, haptics, ads
+AnkiLiteTests/          # Renderer, scheduler, import, and database tests
 ```
 
-## 実装済み機能（P0 / MVP）
+## Roadmap
 
-- **apkg インポート**: ZIP 解凍 → SQLite 読み込み → アプリ内 DB へ保存。
-  `collection.anki21` / `collection.anki2` の両対応。メディアもサンドボックスへ保存。
-  進捗バー表示、再インポート時の「上書き / マージ」選択。
-- **カードレンダリング（WKWebView）**: `{{Field}}`、`{{FrontSide}}`、`{{cloze:Field}}`、
-  条件分岐 `{{#}}` / `{{^}}`、`[sound:...]` → `<audio>`、画像表示、欠損メディアのプレースホルダー、
-  ノートタイプ CSS 適用、ダークモード（`night_mode` クラス方式）。
-- **学習画面**: 表面 → タップで裏面 → Again / Hard / Good / Easy。各ボタンに次回間隔を表示。
-  スワイプ操作（左 = もう一度 / 右 = ふつう）、残数表示（New / Learning / Review）、完了画面。
-- **デッキ一覧**: 階層表示（`::`）、状態別カウント、タップで学習開始、スワイプで削除。
-- **SM-2 スケジューラ**: 学習ステップ [1分, 10分]、卒業間隔、ease factor 計算（既定 2.50 / 下限 1.30）、
-  ファズ、日付の区切り（既定 午前4時、設定変更可）。
-- **ダークモード**: 既定はダーク。システム追従 / 常にライト / 常にダークを設定で切替。
+Ideas, not commitments — nothing here is scheduled:
 
-## デザイン方針
+- Broader `.apkg` compatibility coverage (unusual note types, filtered decks)
+- FSRS parameter optimization from your own review history
+- iPad and macOS (Catalyst) layouts
+- Text-to-speech for card fields
+- More UI localizations
+- Real screenshots in this README
 
-過度な装飾を避けた、落ち着いたネイティブ寄りの外観です。グラデーションや装飾的な絵文字は使わず、
-中間色のグレー基調＋控えめな単色アクセント、ヘアラインの区切り線、SF Symbols を用いています。
+Have a deck that imports incorrectly? That is the most useful bug report you can file — see below.
 
-## ライセンスに関する注意
+## Contributing
 
-`.apkg` は Anki のエクスポート形式です。本アプリは Anki / AnkiWeb とは無関係の独立実装です。
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to file issues and open pull requests.
+
+## License
+
+[MIT](LICENSE) © 2026 tamakondayo
+
+`.apkg` is Anki's export format. This project is an independent implementation and is **not affiliated with, endorsed by, or connected to** Anki, AnkiWeb, or AnkiMobile.
